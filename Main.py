@@ -453,11 +453,11 @@ def evaluate_model(model, loader, class_names):
 # 🔹 7️⃣ Model-Specific Configurations (edit as needed)
 # ==========================================================
 model_configs = {
-    "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.1, 0.05), "batch": 128, "epochs": 3, "lr": 5e-4}, #30
-    "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 3, "lr": 5e-4}, #50
-    "DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 32, "epochs": 3, "lr": 3e-4}, #50
-    "ResNet50": {"img_size": 256, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 3, "lr": 2e-5}, #40
-    "EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 3, "lr": 1e-4}, #50
+    "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.1, 0.05), "batch": 128, "epochs": 30, "lr": 5e-4}, #30
+    "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 50, "lr": 5e-4}, #50
+    "DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 32, "epochs": 50, "lr": 3e-4}, #50
+    "ResNet50": {"img_size": 256, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
+    "EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
 }
 
 # ==========================================================
