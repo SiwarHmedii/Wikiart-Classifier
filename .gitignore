@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Logs & checkpoints
+logs/
+checkpoints/
+*.log
+
+# Datasets
+wikiart/
+data/
+dataset/
+*.zip
+*.tar.gz
+
+# IDE / OS files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Flask static uploads
+static/uploads/
+
