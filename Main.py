@@ -184,6 +184,9 @@ def create_loaders(batch_size, train_tf, val_tf):
     """
     Build train/val/test loaders using the global class_to_idx mapping.
     num_workers=0 for Windows stability. drop_last=True for training to avoid BN with tiny final batch.
+    this version has changed to be ran on WSL so now the num of workers can safely be increased to 8, sinec WSL handles multiprocessing better.
+    8 workers setup is compatible with the machine used (16GB RAM, 4 cores) + NVIDIA GPU.
+    
     """
     train_ds = WikiArtDataset(train_paths, train_labels, class_to_idx=class_to_idx, transform=train_tf)
     val_ds = WikiArtDataset(val_paths, val_labels, class_to_idx=class_to_idx, transform=val_tf)
