@@ -43,6 +43,43 @@ SOURCE_DIR =  Path.home() / "wikiart_project/wikiart"   # dataset folder
 CHECKPOINT_DIR = Path("./checkpoints")
 CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 
+
+#-------------------------------------------
+# Save my LOGS
+#-------------------------------------------
+
+import sys
+import datetime
+
+# Create logs folder if it doesn't exist
+os.makedirs("logs", exist_ok=True)
+
+# Generate timestamped log filename
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+log_path = f"logs/train_{timestamp}.log"
+
+# Define a custom class that writes to both terminal and file
+class Logger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a", encoding="utf-8")
+
+    def write(self, message):
+        self.terminal.write(message)  # display live in terminal
+        self.log.write(message)       # save in file
+        self.log.flush()              # ensure immediate write
+
+    def flush(self):
+        # Needed for Python’s IO system to work properly
+        self.terminal.flush()
+        self.log.flush()
+
+# Redirect stdout (print) to both terminal and log file
+sys.stdout = Logger(log_path)
+
+print(f"📝 Logging to: {log_path}\n")
+
+
 # ==========================================================
 # 3️⃣ TRANSFORM FUNCTION (Parametrized for Each Model)
 # ==========================================================
@@ -160,7 +197,7 @@ print(f"   ➤ Test:  {len(test_paths)}\n")
 # 8️⃣ HANDLE CLASS IMBALANCE (Weighted Sampler)
 # ==========================================================
 # ==========================================================
-# 8️⃣ HANDLE CLASS IMBALANCE (Weighted Sampler + Loss Weights)
+# 8️⃣ HANDLE CLASS IMBALANCE (Weighted Sampler + Loss Weights)---->updated
 # ==========================================================
 cls_count = Counter(train_labels)
 
@@ -486,21 +523,32 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
         # Validation
         model.eval()
         val_correct, val_total, preds, labels_all = 0, 0, [], []
+        total_val_loss = 0.0 
         with torch.no_grad():
             for imgs, labels in val_loader:
                 imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
                 outputs = model(imgs)
+                val_loss = criterion(outputs, labels) 
                 preds_batch = outputs.argmax(1)
                 val_correct += (preds_batch == labels).sum().item()
                 val_total += labels.size(0)
+                total_val_loss += val_loss.item() * imgs.size(0)
                 preds.extend(preds_batch.cpu().numpy())
                 labels_all.extend(labels.cpu().numpy())
 
         val_acc = val_correct / val_total if val_total > 0 else 0.0
         val_f1 = f1_score(labels_all, preds, average='macro') if len(preds) > 0 else 0.0
+        avg_val_loss = total_val_loss / val_total if val_total > 0 else 0.0   
         scheduler.step(val_acc)
 
-        print(f"[{name}] Epoch {epoch}: TrainAcc={train_acc:.3f} | ValAcc={val_acc:.3f} | F1={val_f1:.3f}")
+        print( 
+            f"[{name}] Epoch {epoch}: "
+            f"TrainAcc={train_acc:.3f} | ValAcc={val_acc:.3f} | "
+            f"TrainLoss={avg_loss:.4f} | ValLoss={avg_val_loss:.4f} | "
+            f"F1={val_f1:.3f}"
+        )
+
+
 
         # Save the best model
         
@@ -593,10 +641,10 @@ def evaluate_model(model, loader, class_names):
 # 🔹 7️⃣ Model-Specific Configurations (edit as needed)
 # ==========================================================
 model_configs = {
-   #"SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
+   "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
    # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 60, "lr": 5e-4}, #60
    "DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 60, "lr": 3e-4}, #50
-    "ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 20, "lr": 2e-5}, #40
+   "ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 20, "lr": 2e-5}, #40
    "EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 15, "lr": 1e-4}, #50
 }
 
