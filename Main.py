@@ -283,6 +283,97 @@ class DeepCNN(nn.Module):
 # ==========================================================
 # 🔹 3️⃣ DeepCNN_v2 (Residual + SE) — also size-flexible
 # ==========================================================
+class BottleneckBlock(nn.Module):
+    """ResNet-style bottleneck with optional SE block and stride-based downsampling."""
+    def __init__(self, in_ch, out_ch, stride=1, use_se=False, reduction=16):
+        super().__init__()
+        mid_ch = out_ch // 4  # bottleneck compression
+
+        self.conv1 = nn.Conv2d(in_ch, mid_ch, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(mid_ch)
+        self.conv2 = nn.Conv2d(mid_ch, mid_ch, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(mid_ch)
+        self.conv3 = nn.Conv2d(mid_ch, out_ch, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(out_ch)
+        self.relu = nn.ReLU(inplace=True)
+
+        self.use_se = use_se
+        if use_se:
+            self.se = SEBlock(out_ch, reduction=reduction)
+
+        # Shortcut connection for dimension or stride changes
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_ch != out_ch:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_ch, out_ch, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_ch)
+            )
+
+    def forward(self, x):
+        identity = self.shortcut(x)
+
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+
+        if self.use_se:
+            out = self.se(out)
+
+        out += identity
+        out = self.relu(out)
+        return out
+
+
+class DeepCNN_v2(nn.Module):
+    """
+    Improved DeepCNN_v2 — ResNet50-inspired with:
+    - Bottleneck blocks (1x1–3x3–1x1)
+    - SE attention
+    - Progressive downsampling (stride-based)
+    - Fused BatchNorm/ReLU logic (Torch 2.0 compatible)
+    """
+    def __init__(self, num_classes, img_size=224, use_se=True):
+        super().__init__()
+        # Early reduction stem
+        self.stem = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+
+        # Residual stages (like ResNet-50 layout)
+        self.stage1 = self._make_stage(64, 256, num_blocks=3, stride=1, use_se=use_se)
+        self.stage2 = self._make_stage(256, 512, num_blocks=4, stride=2, use_se=use_se)
+        self.stage3 = self._make_stage(512, 1024, num_blocks=6, stride=2, use_se=use_se)
+        self.stage4 = self._make_stage(1024, 2048, num_blocks=3, stride=2, use_se=use_se)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Sequential(
+            nn.Linear(2048, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.4),
+            nn.Linear(512, num_classes)
+        )
+
+    def _make_stage(self, in_ch, out_ch, num_blocks, stride, use_se):
+        layers = [BottleneckBlock(in_ch, out_ch, stride=stride, use_se=use_se)]
+        for _ in range(1, num_blocks):
+            layers.append(BottleneckBlock(out_ch, out_ch, stride=1, use_se=use_se))
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.stem(x)
+        x = self.stage1(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        x = self.stage4(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        return self.fc(x)
+
+
 class SEBlock(nn.Module):
     def __init__(self, in_ch, reduction=16):
         super().__init__()
@@ -296,7 +387,7 @@ class SEBlock(nn.Module):
         w = self.fc(x)
         return x * w
 
-
+'''
 class ResidualBlock(nn.Module):
     def __init__(self, in_ch, out_ch, use_se=False):
         super().__init__()
@@ -346,7 +437,7 @@ class DeepCNN_v2(nn.Module):
         x = torch.flatten(x, 1)
         return self.fc(x)
 
-
+'''
 # ==========================================================
 # 🔹 4️⃣ Pretrained Models (ResNet50 / EfficientNetB0)
 # ==========================================================
@@ -372,7 +463,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=5)
 
     best_val = 0
-    patience, counter = 12, 0
+    patience, counter = 8, 0
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -412,27 +503,39 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
         print(f"[{name}] Epoch {epoch}: TrainAcc={train_acc:.3f} | ValAcc={val_acc:.3f} | F1={val_f1:.3f}")
 
         # Save the best model
-        if val_acc > best_val:
-            best_val = val_acc
+        
+
+        if val_f1 > best_val:
+            best_val = val_f1
             counter = 0
             torch.save(model.state_dict(), CHECKPOINT_DIR / f"{name}_best.pth")
-            print(f"✅ Best {name} model saved!")
+            print(f"✅ Best {name} model saved (F1={best_val:.3f})!")
         else:
             counter += 1
             if counter >= patience:
-                print("⏹️ Early stopping.")
+                print("⏹️ Early stopping (no F1 improvement).")
                 break
 
-    print(f"🎯 Best {name} ValAcc: {best_val:.3f}")
+    print(f"🎯 Best {name} ValAcc: {best_val:.3f}|ValF1: {best_val:.3f}")
     return model
 
 
 # ==========================================================
 # 🔹 6️⃣ Evaluation Function
 # ==========================================================
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score
+)
+import numpy as np
+
 def evaluate_model(model, loader, class_names):
     model.eval()
     correct, total, preds, labels_all = 0, 0, [], []
+
     with torch.no_grad():
         for imgs, labels in loader:
             imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
@@ -443,24 +546,58 @@ def evaluate_model(model, loader, class_names):
             preds.extend(p.cpu().numpy())
             labels_all.extend(labels.cpu().numpy())
 
+    # Metrics
     acc = correct / total if total > 0 else 0.0
-    cm = confusion_matrix(labels_all, preds) if len(preds) > 0 else None
-    report = classification_report(labels_all, preds, target_names=class_names) if len(preds) > 0 else ""
-    print(f"✅ Test Accuracy: {acc:.3f}")
-    if report:
-        print(report)
-    return acc, cm
+    error_rate = 1 - acc
+
+    macro_f1 = f1_score(labels_all, preds, average='macro')
+    weighted_f1 = f1_score(labels_all, preds, average='weighted')
+    macro_precision = precision_score(labels_all, preds, average='macro', zero_division=0)
+    weighted_precision = precision_score(labels_all, preds, average='weighted', zero_division=0)
+    macro_recall = recall_score(labels_all, preds, average='macro', zero_division=0)
+    weighted_recall = recall_score(labels_all, preds, average='weighted', zero_division=0)
+
+    cm = confusion_matrix(labels_all, preds)
+    report = classification_report(labels_all, preds, target_names=class_names, zero_division=0)
+
+    # Display summary
+    print("\n==============================")
+    print("📊 MODEL EVALUATION SUMMARY")
+    print("==============================")
+    print(f"✅ Accuracy:       {acc:.4f}")
+    print(f"❌ Error Rate:     {error_rate:.4f}")
+    print(f"🎯 Macro F1:       {macro_f1:.4f}")
+    print(f"📦 Weighted F1:    {weighted_f1:.4f}")
+    print(f"✨ Macro Precision: {macro_precision:.4f}")
+    print(f"✨ Weighted Prec.:  {weighted_precision:.4f}")
+    print(f"📈 Macro Recall:    {macro_recall:.4f}")
+    print(f"📈 Weighted Recall: {weighted_recall:.4f}")
+    print(f"🧮 Confusion Matrix: {cm.shape}")
+    print("==============================\n")
+    print(report)
+
+    return {
+        "accuracy": acc,
+        "error_rate": error_rate,
+        "macro_f1": macro_f1,
+        "weighted_f1": weighted_f1,
+        "macro_precision": macro_precision,
+        "weighted_precision": weighted_precision,
+        "macro_recall": macro_recall,
+        "weighted_recall": weighted_recall,
+        "confusion_matrix": cm
+    }
 
 
 # ==========================================================
 # 🔹 7️⃣ Model-Specific Configurations (edit as needed)
 # ==========================================================
 model_configs = {
-    "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.1, 0.05), "batch": 128, "epochs": 30, "lr": 5e-4}, #30
-    "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 50, "lr": 5e-4}, #50
-    "DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 32, "epochs": 50, "lr": 3e-4}, #50
-    "ResNet50": {"img_size": 256, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
-    "EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
+   #"SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
+   # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 60, "lr": 5e-4}, #60
+   "DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 60, "lr": 3e-4}, #50
+    "ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 20, "lr": 2e-5}, #40
+   "EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 15, "lr": 1e-4}, #50
 }
 
 # ==========================================================
