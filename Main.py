@@ -230,11 +230,11 @@ def create_loaders(batch_size, train_tf, val_tf):
     test_ds = WikiArtDataset(test_paths, test_labels, class_to_idx=class_to_idx, transform=val_tf)
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, sampler=sampler,
-                              num_workers=8, pin_memory=True, drop_last=True)
+                              num_workers=10, pin_memory=True, drop_last=True)
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
-                            num_workers=8, pin_memory=True)
+                            num_workers=10, pin_memory=True)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
-                             num_workers=8, pin_memory=True)
+                             num_workers=10, pin_memory=True)
     return train_loader, val_loader, test_loader
 
 
@@ -511,6 +511,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
             optimizer.zero_grad()
             outputs = model(imgs)
             loss = criterion(outputs, labels)
+            
             loss.backward()
             optimizer.step()
             total_loss += loss.item() * imgs.size(0)
@@ -564,7 +565,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
                 print("⏹️ Early stopping (no F1 improvement).")
                 break
 
-    print(f"🎯 Best {name} ValAcc: {best_val:.3f}|ValF1: {best_val:.3f}")
+    print(f"🎯 Best {name} ValAcc: {val_acc:.3f}|ValF1: {best_val:.3f}")
     return model
 
 
@@ -641,11 +642,11 @@ def evaluate_model(model, loader, class_names):
 # 🔹 7️⃣ Model-Specific Configurations (edit as needed)
 # ==========================================================
 model_configs = {
-   "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
-   # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 60, "lr": 5e-4}, #60
-   "DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 60, "lr": 3e-4}, #50
-   "ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 20, "lr": 2e-5}, #40
-   "EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 15, "lr": 1e-4}, #50
+   #"SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
+   "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
+   #"DeepCNN_v2": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 60, "lr": 3e-4}, #50
+   #"ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
+   #"EfficientNetB0": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
 }
 
 # ==========================================================
