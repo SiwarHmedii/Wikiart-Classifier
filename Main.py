@@ -1,8 +1,7 @@
 # ==========================================================
 # 🎨 WikiArt Classification - Model-Aware Training Pipeline
 # ==========================================================
-# Author: Siwar
-# Description: Trains multiple CNNs with model-specific
+# # Description: Trains multiple CNNs with model-specific
 #              augmentations, input sizes and hyperparameters.
 # - Uses consistent class -> index mapping across datasets
 # - SimpleCNN is dynamic (infers flattened size)
@@ -34,7 +33,8 @@ SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#It checks if a CUDA-enabled GPU is available and sets DEVICE to "cuda"; otherwise, it uses the CPU.
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")   
 print(f"✅ Using device: {DEVICE}")
 
 # ------------------------------
@@ -62,18 +62,18 @@ log_path = f"logs/train_{timestamp}.log"
 # Define a custom class that writes to both terminal and file
 class Logger(object):
     def __init__(self, filename):
-        self.terminal = sys.stdout
-        self.log = open(filename, "a", encoding="utf-8")
+        self.terminal = sys.stdout  # original stdout
+        self.log = open(filename, "a", encoding="utf-8") # log file in append mode
 
-    def write(self, message):
+    def write(self, message): 
         self.terminal.write(message)  # display live in terminal
         self.log.write(message)       # save in file
         self.log.flush()              # ensure immediate write
 
     def flush(self):
         # Needed for Python’s IO system to work properly
-        self.terminal.flush()
-        self.log.flush()
+        self.terminal.flush() # flush terminal
+        self.log.flush()    # flush log file
 
 # Redirect stdout (print) to both terminal and log file
 sys.stdout = Logger(log_path)
@@ -97,14 +97,14 @@ def get_transforms(model_name, size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0
     # 1) CLIP MODELS
     # ===============================
     if "clip" in model_name.lower():
-        clip_mean = (0.48145466, 0.4578275, 0.40821073)
-        clip_std  = (0.26862954, 0.26130258, 0.27577711)
+        clip_mean = (0.48145466, 0.4578275, 0.40821073) #CLIP mean
+        clip_std  = (0.26862954, 0.26130258, 0.27577711) #CLIP std
 
         train_tf = transforms.Compose([
-            transforms.RandomResizedCrop(size, scale=(0.9, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(clip_mean, clip_std)
+            transforms.RandomResizedCrop(size, scale=(0.9, 1.0)), # slight crop
+            transforms.RandomHorizontalFlip(), # horizontal flip
+            transforms.ToTensor(), # to tensor
+            transforms.Normalize(clip_mean, clip_std) # CLIP norm
         ])
 
         val_tf = transforms.Compose([
@@ -123,7 +123,26 @@ def get_transforms(model_name, size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0
         train_tf = timm.data.create_transform(**cfg, is_training=True)
         val_tf = timm.data.create_transform(**cfg, is_training=False)
         return train_tf, val_tf
+    # ===============================
+    # 2) ViT MODELS (timm ImageNet-21K)
+    # ===============================
+    if "eva02" in model_name.lower():
+        clip_mean = (0.48145466, 0.4578275, 0.40821073)
+        clip_std  = (0.26862954, 0.26130258, 0.27577711)
 
+    train_tf = transforms.Compose([
+        transforms.RandomResizedCrop(size, scale=(0.9, 1.0)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(clip_mean, clip_std)
+    ])
+
+    val_tf = transforms.Compose([
+        transforms.Resize((size, size)),
+        transforms.ToTensor(),
+        transforms.Normalize(clip_mean, clip_std)
+    ])
+    return train_tf, val_tf
 
 
     # ===============================
@@ -410,10 +429,6 @@ def get_openclip_vitb16(num_classes):
         num_classes=num_classes
     )
 
-
-
-
-
 #===========================================================
 #Vision Transformer (ViT-B/16) pretrained on ImageNet-21K.
 #=============================================================
@@ -429,6 +444,25 @@ def get_vit_base_in21k(num_classes):
     )
     return model
 
+# ==========================================================
+# EVA02 Base Patch16 CLIP (224px)
+# ==========================================================
+def get_eva02_base_clip_224(num_classes):
+    """
+    EVA02 Base Patch16 CLIP model with 224px resolution.
+    Outperforms OpenAI CLIP-B/16 and OpenCLIP-B/16.
+    """
+    import timm
+    import torch.nn as nn
+
+    # Load pretrained EVA02 CLIP-B/16 (224px)
+    model = timm.create_model(
+        "eva02_base_patch16_clip_224",
+        pretrained=True,
+        num_classes=num_classes   # automatically replaces the CLIP head
+    )
+
+    return model
 
 # ==========================================================
 # 🔹 5️⃣ Training Function (model-aware CNN / ViT / CLIP)
@@ -622,8 +656,16 @@ model_configs = {
   # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
    #"ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
    #"EfficientNetV2": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
-   "openclip_vitb16": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
-   "vit_base_in21k": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+   # "openclip_vitb16": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  # "vit_base_in21k": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+   "eva02_base_clip": {
+        "img_size": 224,
+        "rotation": 0,                # EVA02 prefers minimal aug
+        "color_jitter": (0.1, 0.1, 0.05, 0.02),
+        "batch": 24,
+        "epochs": 30,
+        "lr": 5e-6
+    },
 }
 
 # ==========================================================
@@ -646,6 +688,8 @@ def build_model_by_name(name, num_classes, img_size):
         return get_openclip_vitb16(num_classes)
     elif name == "vit_base_in21k":
         return get_vit_base_in21k(num_classes)
+    elif name == "eva02_base_clip":
+        return get_eva02_base_clip_224(num_classes)
         
     else:
         raise ValueError(f"Unknown model name: {name}")
