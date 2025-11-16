@@ -1,17 +1,3 @@
-📝 Logging to: logs/train_2025-11-12_21-43-36.log
-
-
-🖼️ Loaded 81444 total images across 27 classes.
-
-📊 Data split summary:
-   ➤ Total images: 81444
-   ➤ Classes: 27
-   ➤ Train: 58842
-   ➤ Val:   10385
-   ➤ Test:  12217
-
-
-==============================
-🚀 Starting convnext_tiny | IMG=224 | Batch=16 | LR=1e-05 | Epochs=40
-==============================
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:045d116433b5e8c10af91813ee5d0dee4465bbac2e311ddffb99a8090407e492
+size 376

@@ -1,17 +1,3 @@
-📝 Logging to: logs/train_2025-11-14_23-21-47.log
-
-
-🖼️ Loaded 81444 total images across 27 classes.
-
-📊 Data split summary:
-   ➤ Total images: 81444
-   ➤ Classes: 27
-   ➤ Train: 58842
-   ➤ Val:   10385
-   ➤ Test:  12217
-
-
-==============================
-🚀 Starting openclip_vitb16 | IMG=336 | Batch=16 | LR=1e-05 | Epochs=40
-==============================
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:e1e07f1b49411abc970ede0ea1536ddc654b3a2cb5d0067f3c74536e5e30f690
+size 378

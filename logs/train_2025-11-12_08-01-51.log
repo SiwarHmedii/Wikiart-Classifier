@@ -1,17 +1,3 @@
-📝 Logging to: logs/train_2025-11-12_08-01-51.log
-
-
-🖼️ Loaded 81444 total images across 27 classes.
-
-📊 Data split summary:
-   ➤ Total images: 81444
-   ➤ Classes: 27
-   ➤ Train: 58842
-   ➤ Val:   10385
-   ➤ Test:  12217
-
-
-==============================
-🚀 Starting EfficientNetB0 | IMG=224 | Batch=16 | LR=0.0001 | Epochs=50
-==============================
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:0a6d3821fa504183d6189048074cac6557afd29cc6832538e4439d99ef682ee6
+size 378

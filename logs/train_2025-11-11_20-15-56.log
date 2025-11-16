@@ -1,18 +1,3 @@
-📝 Logging to: logs/train_2025-11-11_20-15-56.log
-
-
-🖼️ Loaded 81444 total images across 27 classes.
-
-📊 Data split summary:
-   ➤ Total images: 81444
-   ➤ Classes: 27
-   ➤ Train: 58842
-   ➤ Val:   10385
-   ➤ Test:  12217
-
-
-==============================
-🚀 Starting get_clip_vitb16 | IMG=224 | Batch=16 | LR=0.0001 | Epochs=20
-==============================
-
-Downloading: "https://download.pytorch.org/models/vit_b_16-c867db91.pth" to /home/siwar/.cache/torch/hub/checkpoints/vit_b_16-c867db91.pth
+version https://git-lfs.github.com/spec/v1
+oid sha256:7837faa7f3f079e464ae9eaa71a9ec8ad09fc0d7e169f1e7c2927ec7e9c105ae
+size 518
