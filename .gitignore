@@ -8,9 +8,9 @@ __pycache__/
 .venv/
 
 # Logs & checkpoints
-logs/
-checkpoints/
-*.log
+#logs/
+#checkpoints/
+#*.log
 
 # Datasets
 wikiart/

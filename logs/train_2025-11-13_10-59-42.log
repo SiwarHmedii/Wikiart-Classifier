@@ -1,0 +1,97 @@
+📝 Logging to: logs/train_2025-11-13_10-59-42.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting openclip_vitb16 | IMG=224 | Batch=16 | LR=1e-05 | Epochs=40
+==============================
+
+[openclip_vitb16] Epoch 1: TrainAcc=0.518 | ValAcc=0.524 | TrainLoss=1.3078 | ValLoss=1.2600 | F1=0.533
+✅ Best openclip_vitb16 model saved (F1=0.533)!
+[openclip_vitb16] Epoch 2: TrainAcc=0.655 | ValAcc=0.604 | TrainLoss=0.8338 | ValLoss=1.1065 | F1=0.601
+✅ Best openclip_vitb16 model saved (F1=0.601)!
+[openclip_vitb16] Epoch 3: TrainAcc=0.719 | ValAcc=0.637 | TrainLoss=0.6472 | ValLoss=1.0545 | F1=0.627
+✅ Best openclip_vitb16 model saved (F1=0.627)!
+[openclip_vitb16] Epoch 4: TrainAcc=0.760 | ValAcc=0.637 | TrainLoss=0.5298 | ValLoss=1.0690 | F1=0.624
+[openclip_vitb16] Epoch 5: TrainAcc=0.791 | ValAcc=0.649 | TrainLoss=0.4549 | ValLoss=1.0793 | F1=0.637
+✅ Best openclip_vitb16 model saved (F1=0.637)!
+[openclip_vitb16] Epoch 6: TrainAcc=0.816 | ValAcc=0.656 | TrainLoss=0.3944 | ValLoss=1.0890 | F1=0.647
+✅ Best openclip_vitb16 model saved (F1=0.647)!
+[openclip_vitb16] Epoch 7: TrainAcc=0.834 | ValAcc=0.649 | TrainLoss=0.3470 | ValLoss=1.1430 | F1=0.633
+[openclip_vitb16] Epoch 8: TrainAcc=0.854 | ValAcc=0.629 | TrainLoss=0.3064 | ValLoss=1.2223 | F1=0.638
+[openclip_vitb16] Epoch 9: TrainAcc=0.870 | ValAcc=0.640 | TrainLoss=0.2726 | ValLoss=1.2209 | F1=0.642
+[openclip_vitb16] Epoch 10: TrainAcc=0.878 | ValAcc=0.658 | TrainLoss=0.2539 | ValLoss=1.1737 | F1=0.664
+✅ Best openclip_vitb16 model saved (F1=0.664)!
+[openclip_vitb16] Epoch 11: TrainAcc=0.889 | ValAcc=0.654 | TrainLoss=0.2306 | ValLoss=1.2623 | F1=0.628
+[openclip_vitb16] Epoch 12: TrainAcc=0.898 | ValAcc=0.658 | TrainLoss=0.2151 | ValLoss=1.2636 | F1=0.642
+[openclip_vitb16] Epoch 13: TrainAcc=0.907 | ValAcc=0.664 | TrainLoss=0.1964 | ValLoss=1.2802 | F1=0.654
+[openclip_vitb16] Epoch 14: TrainAcc=0.914 | ValAcc=0.648 | TrainLoss=0.1825 | ValLoss=1.3737 | F1=0.642
+[openclip_vitb16] Epoch 15: TrainAcc=0.919 | ValAcc=0.657 | TrainLoss=0.1689 | ValLoss=1.3339 | F1=0.643
+[openclip_vitb16] Epoch 16: TrainAcc=0.926 | ValAcc=0.658 | TrainLoss=0.1594 | ValLoss=1.3715 | F1=0.643
+[openclip_vitb16] Epoch 17: TrainAcc=0.927 | ValAcc=0.659 | TrainLoss=0.1536 | ValLoss=1.3623 | F1=0.653
+[openclip_vitb16] Epoch 18: TrainAcc=0.934 | ValAcc=0.653 | TrainLoss=0.1415 | ValLoss=1.3895 | F1=0.639
+⏹️ Early stopping (no F1 improvement).
+🎯 Best openclip_vitb16 ValAcc: 0.653|ValF1: 0.664
+
+==============================
+📊 MODEL EVALUATION SUMMARY
+==============================
+✅ Accuracy:       0.6617
+❌ Error Rate:     0.3383
+🎯 Macro F1:       0.6691
+📦 Weighted F1:    0.6634
+✨ Macro Precision: 0.6796
+✨ Weighted Prec.:  0.6755
+📈 Macro Recall:    0.6694
+📈 Weighted Recall: 0.6617
+🧮 Confusion Matrix: (27, 27)
+==============================
+
+                            precision    recall  f1-score   support
+
+    Abstract_Expressionism       0.67      0.75      0.71       417
+           Action_painting       0.67      0.53      0.59        15
+         Analytical_Cubism       0.83      0.88      0.86        17
+        Art_Nouveau_Modern       0.65      0.68      0.66       650
+                   Baroque       0.75      0.77      0.76       636
+      Color_Field_Painting       0.75      0.73      0.74       242
+      Contemporary_Realism       0.79      0.57      0.66        72
+                    Cubism       0.53      0.68      0.60       335
+         Early_Renaissance       0.81      0.75      0.78       209
+             Expressionism       0.51      0.63      0.56      1010
+                   Fauvism       0.42      0.37      0.40       140
+          High_Renaissance       0.74      0.61      0.67       201
+             Impressionism       0.84      0.63      0.72      1959
+Mannerism_Late_Renaissance       0.66      0.67      0.66       192
+                Minimalism       0.68      0.75      0.72       201
+     Naive_Art_Primitivism       0.72      0.64      0.68       361
+               New_Realism       0.57      0.36      0.44        47
+      Northern_Renaissance       0.77      0.88      0.82       383
+               Pointillism       0.63      0.70      0.66        77
+                   Pop_Art       0.78      0.58      0.67       223
+        Post_Impressionism       0.55      0.54      0.55       968
+                   Realism       0.66      0.63      0.64      1610
+                    Rococo       0.63      0.87      0.73       313
+               Romanticism       0.68      0.64      0.66      1053
+                 Symbolism       0.52      0.65      0.58       679
+          Synthetic_Cubism       0.66      0.59      0.62        32
+                   Ukiyo_e       0.91      0.97      0.94       175
+
+                  accuracy                           0.66     12217
+                 macro avg       0.68      0.67      0.67     12217
+              weighted avg       0.68      0.66      0.66     12217
+
+
+==============================
+🚀 Starting vit_base_in21k | IMG=224 | Batch=16 | LR=1e-05 | Epochs=40
+==============================
+

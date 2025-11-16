@@ -1,0 +1,158 @@
+📝 Logging to: logs/train_2025-11-12_08-59-17.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting EfficientNetB0 | IMG=224 | Batch=16 | LR=0.0001 | Epochs=50
+==============================
+
+[EfficientNetB0] Epoch 1: TrainAcc=0.446 | ValAcc=0.497 | TrainLoss=1.5379 | ValLoss=1.4185 | F1=0.497
+✅ Best EfficientNetB0 model saved (F1=0.497)!
+[EfficientNetB0] Epoch 2: TrainAcc=0.591 | ValAcc=0.531 | TrainLoss=1.0136 | ValLoss=1.3930 | F1=0.513
+✅ Best EfficientNetB0 model saved (F1=0.513)!
+[EfficientNetB0] Epoch 3: TrainAcc=0.648 | ValAcc=0.546 | TrainLoss=0.8324 | ValLoss=1.3897 | F1=0.545
+✅ Best EfficientNetB0 model saved (F1=0.545)!
+[EfficientNetB0] Epoch 4: TrainAcc=0.690 | ValAcc=0.567 | TrainLoss=0.7030 | ValLoss=1.3381 | F1=0.557
+✅ Best EfficientNetB0 model saved (F1=0.557)!
+[EfficientNetB0] Epoch 5: TrainAcc=0.717 | ValAcc=0.584 | TrainLoss=0.6300 | ValLoss=1.3643 | F1=0.570
+✅ Best EfficientNetB0 model saved (F1=0.570)!
+[EfficientNetB0] Epoch 6: TrainAcc=0.741 | ValAcc=0.590 | TrainLoss=0.5627 | ValLoss=1.4376 | F1=0.577
+✅ Best EfficientNetB0 model saved (F1=0.577)!
+[EfficientNetB0] Epoch 7: TrainAcc=0.759 | ValAcc=0.599 | TrainLoss=0.5134 | ValLoss=1.4363 | F1=0.589
+✅ Best EfficientNetB0 model saved (F1=0.589)!
+[EfficientNetB0] Epoch 8: TrainAcc=0.773 | ValAcc=0.601 | TrainLoss=0.4760 | ValLoss=1.4324 | F1=0.594
+✅ Best EfficientNetB0 model saved (F1=0.594)!
+[EfficientNetB0] Epoch 9: TrainAcc=0.790 | ValAcc=0.594 | TrainLoss=0.4461 | ValLoss=1.5060 | F1=0.582
+[EfficientNetB0] Epoch 10: TrainAcc=0.805 | ValAcc=0.604 | TrainLoss=0.4059 | ValLoss=1.5271 | F1=0.588
+[EfficientNetB0] Epoch 11: TrainAcc=0.811 | ValAcc=0.601 | TrainLoss=0.3879 | ValLoss=1.5448 | F1=0.580
+[EfficientNetB0] Epoch 12: TrainAcc=0.824 | ValAcc=0.595 | TrainLoss=0.3637 | ValLoss=1.6177 | F1=0.581
+[EfficientNetB0] Epoch 13: TrainAcc=0.835 | ValAcc=0.601 | TrainLoss=0.3412 | ValLoss=1.6194 | F1=0.590
+[EfficientNetB0] Epoch 14: TrainAcc=0.842 | ValAcc=0.614 | TrainLoss=0.3268 | ValLoss=1.6446 | F1=0.602
+✅ Best EfficientNetB0 model saved (F1=0.602)!
+[EfficientNetB0] Epoch 15: TrainAcc=0.848 | ValAcc=0.603 | TrainLoss=0.3103 | ValLoss=1.7158 | F1=0.596
+[EfficientNetB0] Epoch 16: TrainAcc=0.853 | ValAcc=0.609 | TrainLoss=0.2981 | ValLoss=1.6972 | F1=0.599
+[EfficientNetB0] Epoch 17: TrainAcc=0.859 | ValAcc=0.611 | TrainLoss=0.2842 | ValLoss=1.7639 | F1=0.597
+[EfficientNetB0] Epoch 18: TrainAcc=0.865 | ValAcc=0.606 | TrainLoss=0.2732 | ValLoss=1.7829 | F1=0.599
+[EfficientNetB0] Epoch 19: TrainAcc=0.872 | ValAcc=0.610 | TrainLoss=0.2610 | ValLoss=1.6908 | F1=0.606
+✅ Best EfficientNetB0 model saved (F1=0.606)!
+[EfficientNetB0] Epoch 20: TrainAcc=0.875 | ValAcc=0.612 | TrainLoss=0.2532 | ValLoss=1.7529 | F1=0.600
+[EfficientNetB0] Epoch 21: TrainAcc=0.904 | ValAcc=0.634 | TrainLoss=0.1885 | ValLoss=1.8029 | F1=0.618
+✅ Best EfficientNetB0 model saved (F1=0.618)!
+[EfficientNetB0] Epoch 22: TrainAcc=0.916 | ValAcc=0.627 | TrainLoss=0.1629 | ValLoss=1.8445 | F1=0.626
+✅ Best EfficientNetB0 model saved (F1=0.626)!
+[EfficientNetB0] Epoch 23: TrainAcc=0.921 | ValAcc=0.633 | TrainLoss=0.1507 | ValLoss=1.8315 | F1=0.626
+✅ Best EfficientNetB0 model saved (F1=0.626)!
+[EfficientNetB0] Epoch 24: TrainAcc=0.928 | ValAcc=0.630 | TrainLoss=0.1409 | ValLoss=1.9202 | F1=0.624
+[EfficientNetB0] Epoch 25: TrainAcc=0.933 | ValAcc=0.626 | TrainLoss=0.1294 | ValLoss=2.0102 | F1=0.610
+[EfficientNetB0] Epoch 26: TrainAcc=0.936 | ValAcc=0.623 | TrainLoss=0.1260 | ValLoss=2.0754 | F1=0.606
+[EfficientNetB0] Epoch 27: TrainAcc=0.938 | ValAcc=0.623 | TrainLoss=0.1221 | ValLoss=2.0896 | F1=0.608
+[EfficientNetB0] Epoch 28: TrainAcc=0.947 | ValAcc=0.631 | TrainLoss=0.1011 | ValLoss=2.1597 | F1=0.615
+[EfficientNetB0] Epoch 29: TrainAcc=0.953 | ValAcc=0.636 | TrainLoss=0.0888 | ValLoss=2.1572 | F1=0.622
+[EfficientNetB0] Epoch 30: TrainAcc=0.956 | ValAcc=0.637 | TrainLoss=0.0845 | ValLoss=2.1010 | F1=0.624
+[EfficientNetB0] Epoch 31: TrainAcc=0.959 | ValAcc=0.634 | TrainLoss=0.0774 | ValLoss=2.2292 | F1=0.629
+✅ Best EfficientNetB0 model saved (F1=0.629)!
+[EfficientNetB0] Epoch 32: TrainAcc=0.960 | ValAcc=0.634 | TrainLoss=0.0764 | ValLoss=2.1568 | F1=0.632
+✅ Best EfficientNetB0 model saved (F1=0.632)!
+[EfficientNetB0] Epoch 33: TrainAcc=0.963 | ValAcc=0.629 | TrainLoss=0.0709 | ValLoss=2.2989 | F1=0.623
+[EfficientNetB0] Epoch 34: TrainAcc=0.964 | ValAcc=0.634 | TrainLoss=0.0692 | ValLoss=2.2398 | F1=0.624
+[EfficientNetB0] Epoch 35: TrainAcc=0.963 | ValAcc=0.630 | TrainLoss=0.0699 | ValLoss=2.2556 | F1=0.622
+[EfficientNetB0] Epoch 36: TrainAcc=0.965 | ValAcc=0.630 | TrainLoss=0.0667 | ValLoss=2.3581 | F1=0.618
+[EfficientNetB0] Epoch 37: TrainAcc=0.968 | ValAcc=0.635 | TrainLoss=0.0602 | ValLoss=2.3866 | F1=0.621
+[EfficientNetB0] Epoch 38: TrainAcc=0.971 | ValAcc=0.639 | TrainLoss=0.0558 | ValLoss=2.3659 | F1=0.623
+[EfficientNetB0] Epoch 39: TrainAcc=0.972 | ValAcc=0.636 | TrainLoss=0.0539 | ValLoss=2.3195 | F1=0.627
+[EfficientNetB0] Epoch 40: TrainAcc=0.972 | ValAcc=0.635 | TrainLoss=0.0521 | ValLoss=2.4052 | F1=0.620
+⏹️ Early stopping (no F1 improvement).
+🎯 Best EfficientNetB0 ValAcc: 0.635|ValF1: 0.632
+
+==============================
+📊 MODEL EVALUATION SUMMARY
+==============================
+✅ Accuracy:       0.6349
+❌ Error Rate:     0.3651
+🎯 Macro F1:       0.6346
+📦 Weighted F1:    0.6336
+✨ Macro Precision: 0.6499
+✨ Weighted Prec.:  0.6359
+📈 Macro Recall:    0.6293
+📈 Weighted Recall: 0.6349
+🧮 Confusion Matrix: (27, 27)
+==============================
+
+                            precision    recall  f1-score   support
+
+    Abstract_Expressionism       0.62      0.71      0.66       417
+           Action_painting       0.56      0.60      0.58        15
+         Analytical_Cubism       0.88      0.82      0.85        17
+        Art_Nouveau_Modern       0.64      0.62      0.63       650
+                   Baroque       0.69      0.79      0.74       636
+      Color_Field_Painting       0.77      0.66      0.71       242
+      Contemporary_Realism       0.76      0.43      0.55        72
+                    Cubism       0.51      0.64      0.57       335
+         Early_Renaissance       0.70      0.70      0.70       209
+             Expressionism       0.54      0.56      0.55      1010
+                   Fauvism       0.36      0.29      0.32       140
+          High_Renaissance       0.55      0.53      0.54       201
+             Impressionism       0.71      0.70      0.70      1959
+Mannerism_Late_Renaissance       0.68      0.59      0.63       192
+                Minimalism       0.61      0.77      0.68       201
+     Naive_Art_Primitivism       0.67      0.67      0.67       361
+               New_Realism       0.50      0.28      0.36        47
+      Northern_Renaissance       0.85      0.79      0.82       383
+               Pointillism       0.68      0.58      0.63        77
+                   Pop_Art       0.65      0.53      0.59       223
+        Post_Impressionism       0.52      0.49      0.50       968
+                   Realism       0.58      0.63      0.60      1610
+                    Rococo       0.72      0.75      0.73       313
+               Romanticism       0.65      0.63      0.64      1053
+                 Symbolism       0.61      0.52      0.56       679
+          Synthetic_Cubism       0.66      0.78      0.71        32
+                   Ukiyo_e       0.90      0.95      0.93       175
+
+                  accuracy                           0.63     12217
+                 macro avg       0.65      0.63      0.63     12217
+              weighted avg       0.64      0.63      0.63     12217
+
+
+==============================
+🚀 Starting convnext_tiny | IMG=224 | Batch=16 | LR=0.0001 | Epochs=40
+==============================
+
+[convnext_tiny] Epoch 1: TrainAcc=0.092 | ValAcc=0.106 | TrainLoss=3.0818 | ValLoss=2.9566 | F1=0.075
+✅ Best convnext_tiny model saved (F1=0.075)!
+[convnext_tiny] Epoch 2: TrainAcc=0.147 | ValAcc=0.155 | TrainLoss=2.8008 | ValLoss=2.7165 | F1=0.128
+✅ Best convnext_tiny model saved (F1=0.128)!
+[convnext_tiny] Epoch 3: TrainAcc=0.173 | ValAcc=0.189 | TrainLoss=2.6698 | ValLoss=2.6302 | F1=0.143
+✅ Best convnext_tiny model saved (F1=0.143)!
+[convnext_tiny] Epoch 4: TrainAcc=0.192 | ValAcc=0.183 | TrainLoss=2.5643 | ValLoss=2.6427 | F1=0.158
+✅ Best convnext_tiny model saved (F1=0.158)!
+[convnext_tiny] Epoch 5: TrainAcc=0.215 | ValAcc=0.211 | TrainLoss=2.4691 | ValLoss=2.4867 | F1=0.181
+✅ Best convnext_tiny model saved (F1=0.181)!
+[convnext_tiny] Epoch 6: TrainAcc=0.230 | ValAcc=0.266 | TrainLoss=2.3752 | ValLoss=2.4395 | F1=0.187
+✅ Best convnext_tiny model saved (F1=0.187)!
+[convnext_tiny] Epoch 7: TrainAcc=0.245 | ValAcc=0.271 | TrainLoss=2.3051 | ValLoss=2.3501 | F1=0.215
+✅ Best convnext_tiny model saved (F1=0.215)!
+[convnext_tiny] Epoch 8: TrainAcc=0.263 | ValAcc=0.297 | TrainLoss=2.2228 | ValLoss=2.3006 | F1=0.233
+✅ Best convnext_tiny model saved (F1=0.233)!
+[convnext_tiny] Epoch 9: TrainAcc=0.274 | ValAcc=0.242 | TrainLoss=2.1647 | ValLoss=2.3897 | F1=0.202
+[convnext_tiny] Epoch 10: TrainAcc=0.290 | ValAcc=0.275 | TrainLoss=2.0931 | ValLoss=2.2614 | F1=0.232
+[convnext_tiny] Epoch 11: TrainAcc=0.301 | ValAcc=0.290 | TrainLoss=2.0250 | ValLoss=2.2472 | F1=0.241
+✅ Best convnext_tiny model saved (F1=0.241)!
+[convnext_tiny] Epoch 12: TrainAcc=0.312 | ValAcc=0.300 | TrainLoss=1.9664 | ValLoss=2.2389 | F1=0.246
+✅ Best convnext_tiny model saved (F1=0.246)!
+[convnext_tiny] Epoch 13: TrainAcc=0.331 | ValAcc=0.317 | TrainLoss=1.8969 | ValLoss=2.2244 | F1=0.261
+✅ Best convnext_tiny model saved (F1=0.261)!
+[convnext_tiny] Epoch 14: TrainAcc=0.343 | ValAcc=0.317 | TrainLoss=1.8419 | ValLoss=2.1806 | F1=0.268
+✅ Best convnext_tiny model saved (F1=0.268)!
+[convnext_tiny] Epoch 15: TrainAcc=0.358 | ValAcc=0.325 | TrainLoss=1.7735 | ValLoss=2.1991 | F1=0.264
+[convnext_tiny] Epoch 16: TrainAcc=0.373 | ValAcc=0.306 | TrainLoss=1.7216 | ValLoss=2.2236 | F1=0.262
+[convnext_tiny] Epoch 17: TrainAcc=0.388 | ValAcc=0.328 | TrainLoss=1.6488 | ValLoss=2.1412 | F1=0.299
+✅ Best convnext_tiny model saved (F1=0.299)!

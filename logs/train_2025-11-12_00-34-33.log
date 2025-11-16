@@ -1,0 +1,41 @@
+📝 Logging to: logs/train_2025-11-12_00-34-33.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting get_clip_vitb16 | IMG=224 | Batch=16 | LR=0.0001 | Epochs=20
+==============================
+
+[get_clip_vitb16] Epoch 1: TrainAcc=0.123 | ValAcc=0.142 | TrainLoss=2.8905 | ValLoss=2.6646 | F1=0.123
+✅ Best get_clip_vitb16 model saved (F1=0.123)!
+[get_clip_vitb16] Epoch 2: TrainAcc=0.185 | ValAcc=0.199 | TrainLoss=2.5839 | ValLoss=2.5318 | F1=0.172
+✅ Best get_clip_vitb16 model saved (F1=0.172)!
+[get_clip_vitb16] Epoch 3: TrainAcc=0.215 | ValAcc=0.222 | TrainLoss=2.4441 | ValLoss=2.4697 | F1=0.192
+✅ Best get_clip_vitb16 model saved (F1=0.192)!
+[get_clip_vitb16] Epoch 4: TrainAcc=0.229 | ValAcc=0.200 | TrainLoss=2.3773 | ValLoss=2.4794 | F1=0.185
+[get_clip_vitb16] Epoch 5: TrainAcc=0.247 | ValAcc=0.234 | TrainLoss=2.2835 | ValLoss=2.3975 | F1=0.218
+✅ Best get_clip_vitb16 model saved (F1=0.218)!
+[get_clip_vitb16] Epoch 6: TrainAcc=0.264 | ValAcc=0.232 | TrainLoss=2.2079 | ValLoss=2.3922 | F1=0.208
+[get_clip_vitb16] Epoch 7: TrainAcc=0.276 | ValAcc=0.231 | TrainLoss=2.1463 | ValLoss=2.3875 | F1=0.209
+[get_clip_vitb16] Epoch 8: TrainAcc=0.289 | ValAcc=0.224 | TrainLoss=2.0872 | ValLoss=2.3559 | F1=0.209
+[get_clip_vitb16] Epoch 9: TrainAcc=0.304 | ValAcc=0.249 | TrainLoss=2.0179 | ValLoss=2.3682 | F1=0.213
+[get_clip_vitb16] Epoch 10: TrainAcc=0.314 | ValAcc=0.260 | TrainLoss=1.9648 | ValLoss=2.3142 | F1=0.241
+✅ Best get_clip_vitb16 model saved (F1=0.241)!
+[get_clip_vitb16] Epoch 11: TrainAcc=0.328 | ValAcc=0.265 | TrainLoss=1.9163 | ValLoss=2.2876 | F1=0.241
+✅ Best get_clip_vitb16 model saved (F1=0.241)!
+[get_clip_vitb16] Epoch 12: TrainAcc=0.339 | ValAcc=0.246 | TrainLoss=1.8614 | ValLoss=2.3459 | F1=0.225
+[get_clip_vitb16] Epoch 13: TrainAcc=0.350 | ValAcc=0.268 | TrainLoss=1.8046 | ValLoss=2.2640 | F1=0.245
+✅ Best get_clip_vitb16 model saved (F1=0.245)!
+[get_clip_vitb16] Epoch 14: TrainAcc=0.363 | ValAcc=0.290 | TrainLoss=1.7414 | ValLoss=2.2167 | F1=0.265
+✅ Best get_clip_vitb16 model saved (F1=0.265)!
+[get_clip_vitb16] Epoch 15: TrainAcc=0.372 | ValAcc=0.284 | TrainLoss=1.7047 | ValLoss=2.2427 | F1=0.262
+[get_clip_vitb16] Epoch 16: TrainAcc=0.390 | ValAcc=0.285 | TrainLoss=1.6305 | ValLoss=2.2554 | F1=0.265

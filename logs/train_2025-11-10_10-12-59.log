@@ -1,0 +1,17 @@
+📝 Logging to: logs/train_2025-11-10_10-12-59.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting DeepCNN | IMG=224 | Batch=32 | LR=0.0005 | Epochs=70
+==============================
+

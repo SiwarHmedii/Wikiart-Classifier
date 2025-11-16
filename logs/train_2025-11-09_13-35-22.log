@@ -1,0 +1,19 @@
+📝 Logging to: logs/train_2025-11-09_13-35-22.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting SimpleCNN | IMG=128 | Batch=128 | LR=0.0005 | Epochs=50
+==============================
+
+[SimpleCNN] Epoch 1: TrainAcc=0.149 | ValAcc=0.167 | TrainLoss=2.7668 | ValLoss=2.6644 | F1=0.143
+✅ Best SimpleCNN model saved (F1=0.143)!

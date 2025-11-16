@@ -1,0 +1,454 @@
+📝 Logging to: logs/train_2025-11-09_14-54-16.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting SimpleCNN | IMG=128 | Batch=128 | LR=0.0005 | Epochs=50
+==============================
+
+[SimpleCNN] Epoch 1: TrainAcc=0.151 | ValAcc=0.188 | TrainLoss=2.7538 | ValLoss=2.5873 | F1=0.163
+✅ Best SimpleCNN model saved (F1=0.163)!
+[SimpleCNN] Epoch 2: TrainAcc=0.208 | ValAcc=0.212 | TrainLoss=2.4595 | ValLoss=2.5585 | F1=0.182
+✅ Best SimpleCNN model saved (F1=0.182)!
+[SimpleCNN] Epoch 3: TrainAcc=0.230 | ValAcc=0.217 | TrainLoss=2.3719 | ValLoss=2.4524 | F1=0.184
+✅ Best SimpleCNN model saved (F1=0.184)!
+[SimpleCNN] Epoch 4: TrainAcc=0.243 | ValAcc=0.235 | TrainLoss=2.2930 | ValLoss=2.4084 | F1=0.202
+✅ Best SimpleCNN model saved (F1=0.202)!
+[SimpleCNN] Epoch 5: TrainAcc=0.257 | ValAcc=0.260 | TrainLoss=2.2182 | ValLoss=2.4248 | F1=0.219
+✅ Best SimpleCNN model saved (F1=0.219)!
+[SimpleCNN] Epoch 6: TrainAcc=0.263 | ValAcc=0.259 | TrainLoss=2.2029 | ValLoss=2.2956 | F1=0.220
+✅ Best SimpleCNN model saved (F1=0.220)!
+[SimpleCNN] Epoch 7: TrainAcc=0.277 | ValAcc=0.191 | TrainLoss=2.1437 | ValLoss=2.6105 | F1=0.178
+[SimpleCNN] Epoch 8: TrainAcc=0.268 | ValAcc=0.273 | TrainLoss=2.1622 | ValLoss=2.2286 | F1=0.244
+✅ Best SimpleCNN model saved (F1=0.244)!
+[SimpleCNN] Epoch 9: TrainAcc=0.286 | ValAcc=0.279 | TrainLoss=2.0719 | ValLoss=2.2273 | F1=0.248
+✅ Best SimpleCNN model saved (F1=0.248)!
+[SimpleCNN] Epoch 10: TrainAcc=0.293 | ValAcc=0.295 | TrainLoss=2.0438 | ValLoss=2.5166 | F1=0.244
+[SimpleCNN] Epoch 11: TrainAcc=0.299 | ValAcc=0.313 | TrainLoss=2.0120 | ValLoss=2.1399 | F1=0.267
+✅ Best SimpleCNN model saved (F1=0.267)!
+[SimpleCNN] Epoch 12: TrainAcc=0.304 | ValAcc=0.304 | TrainLoss=1.9889 | ValLoss=2.1660 | F1=0.267
+[SimpleCNN] Epoch 13: TrainAcc=0.312 | ValAcc=0.294 | TrainLoss=1.9541 | ValLoss=2.2319 | F1=0.265
+[SimpleCNN] Epoch 14: TrainAcc=0.310 | ValAcc=0.313 | TrainLoss=1.9581 | ValLoss=2.1608 | F1=0.282
+✅ Best SimpleCNN model saved (F1=0.282)!
+[SimpleCNN] Epoch 15: TrainAcc=0.319 | ValAcc=0.320 | TrainLoss=1.9208 | ValLoss=2.1216 | F1=0.289
+✅ Best SimpleCNN model saved (F1=0.289)!
+[SimpleCNN] Epoch 16: TrainAcc=0.323 | ValAcc=0.331 | TrainLoss=1.8889 | ValLoss=2.1260 | F1=0.297
+✅ Best SimpleCNN model saved (F1=0.297)!
+[SimpleCNN] Epoch 17: TrainAcc=0.330 | ValAcc=0.316 | TrainLoss=1.8678 | ValLoss=2.1107 | F1=0.293
+[SimpleCNN] Epoch 18: TrainAcc=0.337 | ValAcc=0.317 | TrainLoss=1.8438 | ValLoss=2.0803 | F1=0.286
+[SimpleCNN] Epoch 19: TrainAcc=0.335 | ValAcc=0.318 | TrainLoss=1.8480 | ValLoss=2.1806 | F1=0.287
+[SimpleCNN] Epoch 20: TrainAcc=0.338 | ValAcc=0.328 | TrainLoss=1.8364 | ValLoss=2.0983 | F1=0.309
+✅ Best SimpleCNN model saved (F1=0.309)!
+[SimpleCNN] Epoch 21: TrainAcc=0.341 | ValAcc=0.353 | TrainLoss=1.8139 | ValLoss=2.0373 | F1=0.316
+✅ Best SimpleCNN model saved (F1=0.316)!
+[SimpleCNN] Epoch 22: TrainAcc=0.349 | ValAcc=0.329 | TrainLoss=1.7944 | ValLoss=2.0755 | F1=0.301
+[SimpleCNN] Epoch 23: TrainAcc=0.343 | ValAcc=0.306 | TrainLoss=1.7964 | ValLoss=2.1259 | F1=0.277
+[SimpleCNN] Epoch 24: TrainAcc=0.348 | ValAcc=0.351 | TrainLoss=1.7806 | ValLoss=2.1121 | F1=0.305
+[SimpleCNN] Epoch 25: TrainAcc=0.354 | ValAcc=0.343 | TrainLoss=1.7736 | ValLoss=2.0780 | F1=0.315
+[SimpleCNN] Epoch 26: TrainAcc=0.361 | ValAcc=0.349 | TrainLoss=1.7408 | ValLoss=2.0290 | F1=0.325
+✅ Best SimpleCNN model saved (F1=0.325)!
+[SimpleCNN] Epoch 27: TrainAcc=0.360 | ValAcc=0.290 | TrainLoss=1.7297 | ValLoss=2.1479 | F1=0.268
+[SimpleCNN] Epoch 28: TrainAcc=0.376 | ValAcc=0.365 | TrainLoss=1.6667 | ValLoss=1.9887 | F1=0.334
+✅ Best SimpleCNN model saved (F1=0.334)!
+[SimpleCNN] Epoch 29: TrainAcc=0.381 | ValAcc=0.373 | TrainLoss=1.6563 | ValLoss=1.9629 | F1=0.336
+✅ Best SimpleCNN model saved (F1=0.336)!
+[SimpleCNN] Epoch 30: TrainAcc=0.380 | ValAcc=0.374 | TrainLoss=1.6483 | ValLoss=1.9083 | F1=0.342
+✅ Best SimpleCNN model saved (F1=0.342)!
+[SimpleCNN] Epoch 31: TrainAcc=0.384 | ValAcc=0.371 | TrainLoss=1.6410 | ValLoss=1.9054 | F1=0.340
+[SimpleCNN] Epoch 32: TrainAcc=0.387 | ValAcc=0.361 | TrainLoss=1.6311 | ValLoss=1.9415 | F1=0.339
+[SimpleCNN] Epoch 33: TrainAcc=0.392 | ValAcc=0.383 | TrainLoss=1.6037 | ValLoss=1.8922 | F1=0.352
+✅ Best SimpleCNN model saved (F1=0.352)!
+[SimpleCNN] Epoch 34: TrainAcc=0.392 | ValAcc=0.376 | TrainLoss=1.6098 | ValLoss=1.9182 | F1=0.349
+[SimpleCNN] Epoch 35: TrainAcc=0.390 | ValAcc=0.361 | TrainLoss=1.6188 | ValLoss=1.9249 | F1=0.336
+[SimpleCNN] Epoch 36: TrainAcc=0.394 | ValAcc=0.370 | TrainLoss=1.6005 | ValLoss=1.9256 | F1=0.338
+[SimpleCNN] Epoch 37: TrainAcc=0.396 | ValAcc=0.386 | TrainLoss=1.5957 | ValLoss=1.8987 | F1=0.363
+✅ Best SimpleCNN model saved (F1=0.363)!
+[SimpleCNN] Epoch 38: TrainAcc=0.398 | ValAcc=0.390 | TrainLoss=1.5775 | ValLoss=1.8804 | F1=0.355
+[SimpleCNN] Epoch 39: TrainAcc=0.396 | ValAcc=0.391 | TrainLoss=1.5909 | ValLoss=1.9525 | F1=0.347
+[SimpleCNN] Epoch 40: TrainAcc=0.402 | ValAcc=0.387 | TrainLoss=1.5589 | ValLoss=1.9116 | F1=0.358
+[SimpleCNN] Epoch 41: TrainAcc=0.401 | ValAcc=0.401 | TrainLoss=1.5646 | ValLoss=1.8741 | F1=0.368
+✅ Best SimpleCNN model saved (F1=0.368)!
+[SimpleCNN] Epoch 42: TrainAcc=0.399 | ValAcc=0.389 | TrainLoss=1.5617 | ValLoss=1.8947 | F1=0.363
+[SimpleCNN] Epoch 43: TrainAcc=0.407 | ValAcc=0.376 | TrainLoss=1.5425 | ValLoss=1.9042 | F1=0.356
+[SimpleCNN] Epoch 44: TrainAcc=0.404 | ValAcc=0.344 | TrainLoss=1.5541 | ValLoss=2.1165 | F1=0.309
+[SimpleCNN] Epoch 45: TrainAcc=0.404 | ValAcc=0.396 | TrainLoss=1.5463 | ValLoss=1.8631 | F1=0.359
+[SimpleCNN] Epoch 46: TrainAcc=0.409 | ValAcc=0.379 | TrainLoss=1.5360 | ValLoss=1.8918 | F1=0.364
+[SimpleCNN] Epoch 47: TrainAcc=0.409 | ValAcc=0.377 | TrainLoss=1.5287 | ValLoss=1.9287 | F1=0.359
+[SimpleCNN] Epoch 48: TrainAcc=0.416 | ValAcc=0.397 | TrainLoss=1.5051 | ValLoss=1.8568 | F1=0.373
+✅ Best SimpleCNN model saved (F1=0.373)!
+[SimpleCNN] Epoch 49: TrainAcc=0.418 | ValAcc=0.395 | TrainLoss=1.4977 | ValLoss=1.8823 | F1=0.374
+✅ Best SimpleCNN model saved (F1=0.374)!
+[SimpleCNN] Epoch 50: TrainAcc=0.419 | ValAcc=0.410 | TrainLoss=1.5033 | ValLoss=1.8414 | F1=0.379
+✅ Best SimpleCNN model saved (F1=0.379)!
+🎯 Best SimpleCNN ValAcc: 0.379|ValF1: 0.379
+
+==============================
+📊 MODEL EVALUATION SUMMARY
+==============================
+✅ Accuracy:       0.4086
+❌ Error Rate:     0.5914
+🎯 Macro F1:       0.3765
+📦 Weighted F1:    0.4044
+✨ Macro Precision: 0.3589
+✨ Weighted Prec.:  0.4271
+📈 Macro Recall:    0.4393
+📈 Weighted Recall: 0.4086
+🧮 Confusion Matrix: (27, 27)
+==============================
+
+                            precision    recall  f1-score   support
+
+    Abstract_Expressionism       0.38      0.41      0.39       417
+           Action_painting       0.19      0.47      0.27        15
+         Analytical_Cubism       0.44      0.41      0.42        17
+        Art_Nouveau_Modern       0.38      0.39      0.38       650
+                   Baroque       0.46      0.40      0.43       636
+      Color_Field_Painting       0.64      0.68      0.66       242
+      Contemporary_Realism       0.16      0.35      0.22        72
+                    Cubism       0.39      0.35      0.37       335
+         Early_Renaissance       0.38      0.48      0.43       209
+             Expressionism       0.36      0.12      0.19      1010
+                   Fauvism       0.16      0.42      0.23       140
+          High_Renaissance       0.26      0.40      0.32       201
+             Impressionism       0.57      0.62      0.59      1959
+Mannerism_Late_Renaissance       0.31      0.36      0.33       192
+                Minimalism       0.52      0.58      0.55       201
+     Naive_Art_Primitivism       0.25      0.31      0.27       361
+               New_Realism       0.05      0.26      0.09        47
+      Northern_Renaissance       0.42      0.43      0.43       383
+               Pointillism       0.22      0.65      0.33        77
+                   Pop_Art       0.29      0.42      0.35       223
+        Post_Impressionism       0.33      0.23      0.27       968
+                   Realism       0.49      0.36      0.42      1610
+                    Rococo       0.30      0.72      0.42       313
+               Romanticism       0.45      0.39      0.42      1053
+                 Symbolism       0.43      0.29      0.34       679
+          Synthetic_Cubism       0.30      0.53      0.39        32
+                   Ukiyo_e       0.56      0.84      0.67       175
+
+                  accuracy                           0.41     12217
+                 macro avg       0.36      0.44      0.38     12217
+              weighted avg       0.43      0.41      0.40     12217
+
+
+==============================
+🚀 Starting DeepCNN_v2 | IMG=224 | Batch=16 | LR=0.0003 | Epochs=60
+==============================
+
+[DeepCNN_v2] Epoch 1: TrainAcc=0.079 | ValAcc=0.057 | TrainLoss=3.1625 | ValLoss=3.1120 | F1=0.046
+✅ Best DeepCNN_v2 model saved (F1=0.046)!
+[DeepCNN_v2] Epoch 2: TrainAcc=0.121 | ValAcc=0.143 | TrainLoss=2.8608 | ValLoss=2.6700 | F1=0.118
+✅ Best DeepCNN_v2 model saved (F1=0.118)!
+[DeepCNN_v2] Epoch 3: TrainAcc=0.163 | ValAcc=0.188 | TrainLoss=2.6292 | ValLoss=2.5449 | F1=0.143
+✅ Best DeepCNN_v2 model saved (F1=0.143)!
+[DeepCNN_v2] Epoch 4: TrainAcc=0.190 | ValAcc=0.189 | TrainLoss=2.5258 | ValLoss=2.5376 | F1=0.161
+✅ Best DeepCNN_v2 model saved (F1=0.161)!
+[DeepCNN_v2] Epoch 5: TrainAcc=0.213 | ValAcc=0.204 | TrainLoss=2.4230 | ValLoss=2.4261 | F1=0.178
+✅ Best DeepCNN_v2 model saved (F1=0.178)!
+[DeepCNN_v2] Epoch 6: TrainAcc=0.236 | ValAcc=0.234 | TrainLoss=2.3297 | ValLoss=2.3906 | F1=0.190
+✅ Best DeepCNN_v2 model saved (F1=0.190)!
+[DeepCNN_v2] Epoch 7: TrainAcc=0.247 | ValAcc=0.215 | TrainLoss=2.2710 | ValLoss=2.3978 | F1=0.193
+✅ Best DeepCNN_v2 model saved (F1=0.193)!
+[DeepCNN_v2] Epoch 8: TrainAcc=0.260 | ValAcc=0.273 | TrainLoss=2.2086 | ValLoss=2.2597 | F1=0.230
+✅ Best DeepCNN_v2 model saved (F1=0.230)!
+[DeepCNN_v2] Epoch 9: TrainAcc=0.270 | ValAcc=0.275 | TrainLoss=2.1488 | ValLoss=2.2546 | F1=0.236
+✅ Best DeepCNN_v2 model saved (F1=0.236)!
+[DeepCNN_v2] Epoch 10: TrainAcc=0.285 | ValAcc=0.259 | TrainLoss=2.0837 | ValLoss=2.2558 | F1=0.231
+[DeepCNN_v2] Epoch 11: TrainAcc=0.295 | ValAcc=0.277 | TrainLoss=2.0388 | ValLoss=2.2215 | F1=0.244
+✅ Best DeepCNN_v2 model saved (F1=0.244)!
+[DeepCNN_v2] Epoch 12: TrainAcc=0.305 | ValAcc=0.308 | TrainLoss=1.9853 | ValLoss=2.1334 | F1=0.272
+✅ Best DeepCNN_v2 model saved (F1=0.272)!
+[DeepCNN_v2] Epoch 13: TrainAcc=0.317 | ValAcc=0.289 | TrainLoss=1.9369 | ValLoss=2.1160 | F1=0.255
+[DeepCNN_v2] Epoch 14: TrainAcc=0.327 | ValAcc=0.307 | TrainLoss=1.8904 | ValLoss=2.1114 | F1=0.270
+[DeepCNN_v2] Epoch 15: TrainAcc=0.337 | ValAcc=0.347 | TrainLoss=1.8534 | ValLoss=2.0761 | F1=0.301
+✅ Best DeepCNN_v2 model saved (F1=0.301)!
+[DeepCNN_v2] Epoch 16: TrainAcc=0.350 | ValAcc=0.311 | TrainLoss=1.7995 | ValLoss=2.1024 | F1=0.281
+[DeepCNN_v2] Epoch 17: TrainAcc=0.356 | ValAcc=0.324 | TrainLoss=1.7592 | ValLoss=2.0255 | F1=0.305
+✅ Best DeepCNN_v2 model saved (F1=0.305)!
+[DeepCNN_v2] Epoch 18: TrainAcc=0.365 | ValAcc=0.316 | TrainLoss=1.7344 | ValLoss=2.0709 | F1=0.296
+[DeepCNN_v2] Epoch 19: TrainAcc=0.370 | ValAcc=0.337 | TrainLoss=1.6966 | ValLoss=1.9811 | F1=0.310
+✅ Best DeepCNN_v2 model saved (F1=0.310)!
+[DeepCNN_v2] Epoch 20: TrainAcc=0.381 | ValAcc=0.326 | TrainLoss=1.6637 | ValLoss=2.0266 | F1=0.309
+[DeepCNN_v2] Epoch 21: TrainAcc=0.390 | ValAcc=0.331 | TrainLoss=1.6323 | ValLoss=2.0436 | F1=0.302
+[DeepCNN_v2] Epoch 22: TrainAcc=0.421 | ValAcc=0.370 | TrainLoss=1.4998 | ValLoss=1.9137 | F1=0.349
+✅ Best DeepCNN_v2 model saved (F1=0.349)!
+[DeepCNN_v2] Epoch 23: TrainAcc=0.433 | ValAcc=0.379 | TrainLoss=1.4604 | ValLoss=1.9030 | F1=0.364
+✅ Best DeepCNN_v2 model saved (F1=0.364)!
+[DeepCNN_v2] Epoch 24: TrainAcc=0.442 | ValAcc=0.369 | TrainLoss=1.4319 | ValLoss=1.9266 | F1=0.355
+[DeepCNN_v2] Epoch 25: TrainAcc=0.451 | ValAcc=0.375 | TrainLoss=1.3902 | ValLoss=1.9290 | F1=0.356
+[DeepCNN_v2] Epoch 26: TrainAcc=0.454 | ValAcc=0.377 | TrainLoss=1.3756 | ValLoss=1.9787 | F1=0.359
+[DeepCNN_v2] Epoch 27: TrainAcc=0.460 | ValAcc=0.402 | TrainLoss=1.3466 | ValLoss=1.9033 | F1=0.374
+✅ Best DeepCNN_v2 model saved (F1=0.374)!
+[DeepCNN_v2] Epoch 28: TrainAcc=0.466 | ValAcc=0.375 | TrainLoss=1.3336 | ValLoss=1.9440 | F1=0.366
+[DeepCNN_v2] Epoch 29: TrainAcc=0.475 | ValAcc=0.383 | TrainLoss=1.3116 | ValLoss=1.9512 | F1=0.357
+[DeepCNN_v2] Epoch 30: TrainAcc=0.481 | ValAcc=0.391 | TrainLoss=1.2917 | ValLoss=1.9135 | F1=0.369
+[DeepCNN_v2] Epoch 31: TrainAcc=0.492 | ValAcc=0.397 | TrainLoss=1.2538 | ValLoss=1.9554 | F1=0.384
+✅ Best DeepCNN_v2 model saved (F1=0.384)!
+[DeepCNN_v2] Epoch 32: TrainAcc=0.495 | ValAcc=0.407 | TrainLoss=1.2452 | ValLoss=1.8981 | F1=0.385
+✅ Best DeepCNN_v2 model saved (F1=0.385)!
+[DeepCNN_v2] Epoch 33: TrainAcc=0.498 | ValAcc=0.402 | TrainLoss=1.2224 | ValLoss=1.9011 | F1=0.387
+✅ Best DeepCNN_v2 model saved (F1=0.387)!
+[DeepCNN_v2] Epoch 34: TrainAcc=0.505 | ValAcc=0.412 | TrainLoss=1.1998 | ValLoss=1.8974 | F1=0.392
+✅ Best DeepCNN_v2 model saved (F1=0.392)!
+[DeepCNN_v2] Epoch 35: TrainAcc=0.510 | ValAcc=0.407 | TrainLoss=1.1862 | ValLoss=1.9414 | F1=0.387
+[DeepCNN_v2] Epoch 36: TrainAcc=0.510 | ValAcc=0.403 | TrainLoss=1.1792 | ValLoss=1.9131 | F1=0.385
+[DeepCNN_v2] Epoch 37: TrainAcc=0.515 | ValAcc=0.413 | TrainLoss=1.1529 | ValLoss=1.9226 | F1=0.397
+✅ Best DeepCNN_v2 model saved (F1=0.397)!
+[DeepCNN_v2] Epoch 38: TrainAcc=0.522 | ValAcc=0.404 | TrainLoss=1.1479 | ValLoss=1.9281 | F1=0.385
+[DeepCNN_v2] Epoch 39: TrainAcc=0.529 | ValAcc=0.403 | TrainLoss=1.1211 | ValLoss=1.9997 | F1=0.373
+[DeepCNN_v2] Epoch 40: TrainAcc=0.531 | ValAcc=0.401 | TrainLoss=1.1132 | ValLoss=1.9792 | F1=0.386
+[DeepCNN_v2] Epoch 41: TrainAcc=0.536 | ValAcc=0.420 | TrainLoss=1.0945 | ValLoss=1.9351 | F1=0.400
+✅ Best DeepCNN_v2 model saved (F1=0.400)!
+[DeepCNN_v2] Epoch 42: TrainAcc=0.542 | ValAcc=0.408 | TrainLoss=1.0787 | ValLoss=2.0341 | F1=0.390
+[DeepCNN_v2] Epoch 43: TrainAcc=0.546 | ValAcc=0.429 | TrainLoss=1.0658 | ValLoss=1.9603 | F1=0.401
+✅ Best DeepCNN_v2 model saved (F1=0.401)!
+[DeepCNN_v2] Epoch 44: TrainAcc=0.549 | ValAcc=0.413 | TrainLoss=1.0615 | ValLoss=1.9858 | F1=0.396
+[DeepCNN_v2] Epoch 45: TrainAcc=0.554 | ValAcc=0.416 | TrainLoss=1.0358 | ValLoss=2.0545 | F1=0.405
+✅ Best DeepCNN_v2 model saved (F1=0.405)!
+[DeepCNN_v2] Epoch 46: TrainAcc=0.560 | ValAcc=0.410 | TrainLoss=1.0181 | ValLoss=2.0803 | F1=0.398
+[DeepCNN_v2] Epoch 47: TrainAcc=0.566 | ValAcc=0.418 | TrainLoss=1.0091 | ValLoss=2.0010 | F1=0.403
+[DeepCNN_v2] Epoch 48: TrainAcc=0.569 | ValAcc=0.431 | TrainLoss=0.9953 | ValLoss=2.0227 | F1=0.411
+✅ Best DeepCNN_v2 model saved (F1=0.411)!
+[DeepCNN_v2] Epoch 49: TrainAcc=0.573 | ValAcc=0.419 | TrainLoss=0.9819 | ValLoss=2.0371 | F1=0.390
+[DeepCNN_v2] Epoch 50: TrainAcc=0.582 | ValAcc=0.436 | TrainLoss=0.9629 | ValLoss=2.0108 | F1=0.415
+✅ Best DeepCNN_v2 model saved (F1=0.415)!
+[DeepCNN_v2] Epoch 51: TrainAcc=0.583 | ValAcc=0.416 | TrainLoss=0.9521 | ValLoss=2.0918 | F1=0.395
+[DeepCNN_v2] Epoch 52: TrainAcc=0.583 | ValAcc=0.440 | TrainLoss=0.9501 | ValLoss=2.0767 | F1=0.421
+✅ Best DeepCNN_v2 model saved (F1=0.421)!
+[DeepCNN_v2] Epoch 53: TrainAcc=0.588 | ValAcc=0.430 | TrainLoss=0.9300 | ValLoss=2.1410 | F1=0.412
+[DeepCNN_v2] Epoch 54: TrainAcc=0.592 | ValAcc=0.442 | TrainLoss=0.9230 | ValLoss=2.0709 | F1=0.420
+[DeepCNN_v2] Epoch 55: TrainAcc=0.598 | ValAcc=0.428 | TrainLoss=0.9069 | ValLoss=2.0820 | F1=0.414
+[DeepCNN_v2] Epoch 56: TrainAcc=0.599 | ValAcc=0.423 | TrainLoss=0.9026 | ValLoss=2.1061 | F1=0.410
+[DeepCNN_v2] Epoch 57: TrainAcc=0.605 | ValAcc=0.436 | TrainLoss=0.8878 | ValLoss=2.0965 | F1=0.412
+[DeepCNN_v2] Epoch 58: TrainAcc=0.609 | ValAcc=0.440 | TrainLoss=0.8755 | ValLoss=2.1594 | F1=0.416
+[DeepCNN_v2] Epoch 59: TrainAcc=0.608 | ValAcc=0.427 | TrainLoss=0.8709 | ValLoss=2.1719 | F1=0.402
+[DeepCNN_v2] Epoch 60: TrainAcc=0.619 | ValAcc=0.432 | TrainLoss=0.8484 | ValLoss=2.1434 | F1=0.410
+⏹️ Early stopping (no F1 improvement).
+🎯 Best DeepCNN_v2 ValAcc: 0.421|ValF1: 0.421
+
+==============================
+📊 MODEL EVALUATION SUMMARY
+==============================
+✅ Accuracy:       0.4417
+❌ Error Rate:     0.5583
+🎯 Macro F1:       0.4279
+📦 Weighted F1:    0.4398
+✨ Macro Precision: 0.4185
+✨ Weighted Prec.:  0.4567
+📈 Macro Recall:    0.4650
+📈 Weighted Recall: 0.4417
+🧮 Confusion Matrix: (27, 27)
+==============================
+
+                            precision    recall  f1-score   support
+
+    Abstract_Expressionism       0.37      0.48      0.42       417
+           Action_painting       0.33      0.60      0.43        15
+         Analytical_Cubism       0.78      0.41      0.54        17
+        Art_Nouveau_Modern       0.45      0.38      0.41       650
+                   Baroque       0.41      0.55      0.47       636
+      Color_Field_Painting       0.67      0.57      0.61       242
+      Contemporary_Realism       0.23      0.39      0.29        72
+                    Cubism       0.38      0.44      0.41       335
+         Early_Renaissance       0.39      0.51      0.44       209
+             Expressionism       0.38      0.26      0.31      1010
+                   Fauvism       0.20      0.26      0.23       140
+          High_Renaissance       0.37      0.37      0.37       201
+             Impressionism       0.61      0.59      0.60      1959
+Mannerism_Late_Renaissance       0.31      0.44      0.36       192
+                Minimalism       0.51      0.62      0.56       201
+     Naive_Art_Primitivism       0.32      0.47      0.38       361
+               New_Realism       0.16      0.17      0.16        47
+      Northern_Renaissance       0.46      0.61      0.52       383
+               Pointillism       0.27      0.57      0.36        77
+                   Pop_Art       0.35      0.47      0.40       223
+        Post_Impressionism       0.36      0.31      0.34       968
+                   Realism       0.52      0.35      0.42      1610
+                    Rococo       0.33      0.72      0.46       313
+               Romanticism       0.50      0.36      0.42      1053
+                 Symbolism       0.39      0.38      0.38       679
+          Synthetic_Cubism       0.52      0.50      0.51        32
+                   Ukiyo_e       0.74      0.78      0.76       175
+
+                  accuracy                           0.44     12217
+                 macro avg       0.42      0.47      0.43     12217
+              weighted avg       0.46      0.44      0.44     12217
+
+
+==============================
+🚀 Starting ResNet50 | IMG=224 | Batch=16 | LR=2e-05 | Epochs=20
+==============================
+
+[ResNet50] Epoch 1: TrainAcc=0.371 | ValAcc=0.423 | TrainLoss=1.8107 | ValLoss=1.6333 | F1=0.413
+✅ Best ResNet50 model saved (F1=0.413)!
+[ResNet50] Epoch 2: TrainAcc=0.492 | ValAcc=0.482 | TrainLoss=1.3374 | ValLoss=1.4805 | F1=0.467
+✅ Best ResNet50 model saved (F1=0.467)!
+[ResNet50] Epoch 3: TrainAcc=0.545 | ValAcc=0.518 | TrainLoss=1.1534 | ValLoss=1.4157 | F1=0.500
+✅ Best ResNet50 model saved (F1=0.500)!
+[ResNet50] Epoch 4: TrainAcc=0.579 | ValAcc=0.521 | TrainLoss=1.0370 | ValLoss=1.4192 | F1=0.512
+✅ Best ResNet50 model saved (F1=0.512)!
+[ResNet50] Epoch 5: TrainAcc=0.607 | ValAcc=0.544 | TrainLoss=0.9405 | ValLoss=1.4119 | F1=0.521
+✅ Best ResNet50 model saved (F1=0.521)!
+[ResNet50] Epoch 6: TrainAcc=0.629 | ValAcc=0.548 | TrainLoss=0.8651 | ValLoss=1.4440 | F1=0.528
+✅ Best ResNet50 model saved (F1=0.528)!
+[ResNet50] Epoch 7: TrainAcc=0.650 | ValAcc=0.562 | TrainLoss=0.8035 | ValLoss=1.3819 | F1=0.549
+✅ Best ResNet50 model saved (F1=0.549)!
+[ResNet50] Epoch 8: TrainAcc=0.666 | ValAcc=0.561 | TrainLoss=0.7607 | ValLoss=1.4419 | F1=0.536
+[ResNet50] Epoch 9: TrainAcc=0.685 | ValAcc=0.564 | TrainLoss=0.7103 | ValLoss=1.4242 | F1=0.549
+[ResNet50] Epoch 10: TrainAcc=0.697 | ValAcc=0.570 | TrainLoss=0.6677 | ValLoss=1.4150 | F1=0.554
+✅ Best ResNet50 model saved (F1=0.554)!
+[ResNet50] Epoch 11: TrainAcc=0.707 | ValAcc=0.579 | TrainLoss=0.6409 | ValLoss=1.4695 | F1=0.560
+✅ Best ResNet50 model saved (F1=0.560)!
+[ResNet50] Epoch 12: TrainAcc=0.722 | ValAcc=0.580 | TrainLoss=0.6030 | ValLoss=1.4735 | F1=0.565
+✅ Best ResNet50 model saved (F1=0.565)!
+[ResNet50] Epoch 13: TrainAcc=0.732 | ValAcc=0.573 | TrainLoss=0.5717 | ValLoss=1.5447 | F1=0.558
+[ResNet50] Epoch 14: TrainAcc=0.741 | ValAcc=0.582 | TrainLoss=0.5498 | ValLoss=1.5133 | F1=0.565
+✅ Best ResNet50 model saved (F1=0.565)!
+[ResNet50] Epoch 15: TrainAcc=0.749 | ValAcc=0.579 | TrainLoss=0.5285 | ValLoss=1.5429 | F1=0.574
+✅ Best ResNet50 model saved (F1=0.574)!
+[ResNet50] Epoch 16: TrainAcc=0.758 | ValAcc=0.578 | TrainLoss=0.5005 | ValLoss=1.5648 | F1=0.564
+[ResNet50] Epoch 17: TrainAcc=0.766 | ValAcc=0.592 | TrainLoss=0.4846 | ValLoss=1.5972 | F1=0.573
+[ResNet50] Epoch 18: TrainAcc=0.776 | ValAcc=0.582 | TrainLoss=0.4680 | ValLoss=1.6046 | F1=0.574
+✅ Best ResNet50 model saved (F1=0.574)!
+[ResNet50] Epoch 19: TrainAcc=0.783 | ValAcc=0.587 | TrainLoss=0.4488 | ValLoss=1.6279 | F1=0.575
+✅ Best ResNet50 model saved (F1=0.575)!
+[ResNet50] Epoch 20: TrainAcc=0.790 | ValAcc=0.580 | TrainLoss=0.4308 | ValLoss=1.6275 | F1=0.569
+🎯 Best ResNet50 ValAcc: 0.575|ValF1: 0.575
+
+==============================
+📊 MODEL EVALUATION SUMMARY
+==============================
+✅ Accuracy:       0.5871
+❌ Error Rate:     0.4129
+🎯 Macro F1:       0.5879
+📦 Weighted F1:    0.5859
+✨ Macro Precision: 0.5767
+✨ Weighted Prec.:  0.5922
+📈 Macro Recall:    0.6083
+📈 Weighted Recall: 0.5871
+🧮 Confusion Matrix: (27, 27)
+==============================
+
+                            precision    recall  f1-score   support
+
+    Abstract_Expressionism       0.51      0.65      0.57       417
+           Action_painting       0.67      0.67      0.67        15
+         Analytical_Cubism       0.54      0.88      0.67        17
+        Art_Nouveau_Modern       0.54      0.62      0.58       650
+                   Baroque       0.61      0.79      0.69       636
+      Color_Field_Painting       0.69      0.63      0.66       242
+      Contemporary_Realism       0.52      0.44      0.48        72
+                    Cubism       0.54      0.64      0.59       335
+         Early_Renaissance       0.65      0.68      0.66       209
+             Expressionism       0.52      0.41      0.46      1010
+                   Fauvism       0.36      0.30      0.33       140
+          High_Renaissance       0.60      0.51      0.55       201
+             Impressionism       0.71      0.64      0.67      1959
+Mannerism_Late_Renaissance       0.57      0.63      0.60       192
+                Minimalism       0.61      0.78      0.68       201
+     Naive_Art_Primitivism       0.54      0.61      0.57       361
+               New_Realism       0.26      0.23      0.24        47
+      Northern_Renaissance       0.73      0.80      0.76       383
+               Pointillism       0.56      0.68      0.61        77
+                   Pop_Art       0.52      0.54      0.53       223
+        Post_Impressionism       0.45      0.50      0.47       968
+                   Realism       0.60      0.52      0.56      1610
+                    Rococo       0.67      0.68      0.68       313
+               Romanticism       0.64      0.53      0.58      1053
+                 Symbolism       0.44      0.54      0.48       679
+          Synthetic_Cubism       0.61      0.62      0.62        32
+                   Ukiyo_e       0.91      0.90      0.90       175
+
+                  accuracy                           0.59     12217
+                 macro avg       0.58      0.61      0.59     12217
+              weighted avg       0.59      0.59      0.59     12217
+
+
+==============================
+🚀 Starting EfficientNetB0 | IMG=224 | Batch=16 | LR=0.0001 | Epochs=15
+==============================
+
+[EfficientNetB0] Epoch 1: TrainAcc=0.392 | ValAcc=0.465 | TrainLoss=1.7321 | ValLoss=1.4937 | F1=0.441
+✅ Best EfficientNetB0 model saved (F1=0.441)!
+[EfficientNetB0] Epoch 2: TrainAcc=0.517 | ValAcc=0.507 | TrainLoss=1.2388 | ValLoss=1.3773 | F1=0.489
+✅ Best EfficientNetB0 model saved (F1=0.489)!
+[EfficientNetB0] Epoch 3: TrainAcc=0.563 | ValAcc=0.539 | TrainLoss=1.0714 | ValLoss=1.3368 | F1=0.518
+✅ Best EfficientNetB0 model saved (F1=0.518)!
+[EfficientNetB0] Epoch 4: TrainAcc=0.602 | ValAcc=0.545 | TrainLoss=0.9457 | ValLoss=1.3314 | F1=0.534
+✅ Best EfficientNetB0 model saved (F1=0.534)!
+[EfficientNetB0] Epoch 5: TrainAcc=0.630 | ValAcc=0.548 | TrainLoss=0.8585 | ValLoss=1.3272 | F1=0.531
+[EfficientNetB0] Epoch 6: TrainAcc=0.652 | ValAcc=0.554 | TrainLoss=0.7961 | ValLoss=1.3643 | F1=0.547
+✅ Best EfficientNetB0 model saved (F1=0.547)!
+[EfficientNetB0] Epoch 7: TrainAcc=0.670 | ValAcc=0.570 | TrainLoss=0.7398 | ValLoss=1.3437 | F1=0.560
+✅ Best EfficientNetB0 model saved (F1=0.560)!
+[EfficientNetB0] Epoch 8: TrainAcc=0.686 | ValAcc=0.571 | TrainLoss=0.6922 | ValLoss=1.3704 | F1=0.557
+[EfficientNetB0] Epoch 9: TrainAcc=0.701 | ValAcc=0.563 | TrainLoss=0.6551 | ValLoss=1.4158 | F1=0.565
+✅ Best EfficientNetB0 model saved (F1=0.565)!
+[EfficientNetB0] Epoch 10: TrainAcc=0.718 | ValAcc=0.577 | TrainLoss=0.6094 | ValLoss=1.4296 | F1=0.582
+✅ Best EfficientNetB0 model saved (F1=0.582)!
+[EfficientNetB0] Epoch 11: TrainAcc=0.725 | ValAcc=0.584 | TrainLoss=0.5825 | ValLoss=1.3962 | F1=0.575
+[EfficientNetB0] Epoch 12: TrainAcc=0.734 | ValAcc=0.575 | TrainLoss=0.5645 | ValLoss=1.4553 | F1=0.560
+[EfficientNetB0] Epoch 13: TrainAcc=0.748 | ValAcc=0.578 | TrainLoss=0.5300 | ValLoss=1.4756 | F1=0.561
+[EfficientNetB0] Epoch 14: TrainAcc=0.759 | ValAcc=0.574 | TrainLoss=0.5024 | ValLoss=1.4814 | F1=0.577
+[EfficientNetB0] Epoch 15: TrainAcc=0.764 | ValAcc=0.587 | TrainLoss=0.4890 | ValLoss=1.5189 | F1=0.579
+🎯 Best EfficientNetB0 ValAcc: 0.582|ValF1: 0.582
+
+==============================
+📊 MODEL EVALUATION SUMMARY
+==============================
+✅ Accuracy:       0.5857
+❌ Error Rate:     0.4143
+🎯 Macro F1:       0.5894
+📦 Weighted F1:    0.5865
+✨ Macro Precision: 0.5606
+✨ Weighted Prec.:  0.5968
+📈 Macro Recall:    0.6345
+📈 Weighted Recall: 0.5857
+🧮 Confusion Matrix: (27, 27)
+==============================
+
+                            precision    recall  f1-score   support
+
+    Abstract_Expressionism       0.53      0.59      0.56       417
+           Action_painting       0.45      0.67      0.54        15
+         Analytical_Cubism       0.74      0.82      0.78        17
+        Art_Nouveau_Modern       0.57      0.60      0.58       650
+                   Baroque       0.67      0.70      0.68       636
+      Color_Field_Painting       0.69      0.70      0.69       242
+      Contemporary_Realism       0.35      0.60      0.44        72
+                    Cubism       0.54      0.56      0.55       335
+         Early_Renaissance       0.57      0.73      0.64       209
+             Expressionism       0.52      0.44      0.48      1010
+                   Fauvism       0.25      0.44      0.32       140
+          High_Renaissance       0.51      0.59      0.55       201
+             Impressionism       0.76      0.58      0.66      1959
+Mannerism_Late_Renaissance       0.59      0.58      0.58       192
+                Minimalism       0.57      0.75      0.65       201
+     Naive_Art_Primitivism       0.51      0.64      0.57       361
+               New_Realism       0.44      0.36      0.40        47
+      Northern_Renaissance       0.71      0.79      0.75       383
+               Pointillism       0.50      0.75      0.60        77
+                   Pop_Art       0.51      0.61      0.56       223
+        Post_Impressionism       0.47      0.45      0.46       968
+                   Realism       0.61      0.54      0.57      1610
+                    Rococo       0.53      0.79      0.64       313
+               Romanticism       0.58      0.60      0.59      1053
+                 Symbolism       0.54      0.52      0.53       679
+          Synthetic_Cubism       0.52      0.78      0.62        32
+                   Ukiyo_e       0.90      0.94      0.92       175
+
+                  accuracy                           0.59     12217
+                 macro avg       0.56      0.63      0.59     12217
+              weighted avg       0.60      0.59      0.59     12217
+
+
+🏁 All configured models processed.

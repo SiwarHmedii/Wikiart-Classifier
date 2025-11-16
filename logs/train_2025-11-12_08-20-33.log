@@ -1,0 +1,19 @@
+📝 Logging to: logs/train_2025-11-12_08-20-33.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting EfficientNetB0 | IMG=224 | Batch=16 | LR=0.0001 | Epochs=50
+==============================
+
+[EfficientNetB0] Epoch 1: TrainAcc=0.108 | ValAcc=0.129 | TrainLoss=2.9766 | ValLoss=2.8044 | F1=0.109
+✅ Best EfficientNetB0 model saved (F1=0.109)!

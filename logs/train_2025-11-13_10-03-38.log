@@ -1,0 +1,19 @@
+📝 Logging to: logs/train_2025-11-13_10-03-38.log
+
+
+🖼️ Loaded 81444 total images across 27 classes.
+
+📊 Data split summary:
+   ➤ Total images: 81444
+   ➤ Classes: 27
+   ➤ Train: 58842
+   ➤ Val:   10385
+   ➤ Test:  12217
+
+
+==============================
+🚀 Starting convnext_tiny | IMG=224 | Batch=16 | LR=1e-05 | Epochs=40
+==============================
+
+[convnext_tiny] Epoch 1: TrainAcc=0.518 | ValAcc=0.524 | TrainLoss=1.3078 | ValLoss=1.2600 | F1=0.533
+✅ Best convnext_tiny model saved (F1=0.533)!
