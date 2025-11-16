@@ -19,6 +19,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.cuda.amp import autocast, GradScaler
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torchvision import transforms, models
 from PIL import Image
@@ -486,9 +487,12 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
     optimizer = optim.AdamW(
         model.parameters(),
         lr=lr,
-        weight_decay=0.05 if ("vit" in name.lower() or "clip" in name.lower()) else 1e-4
+        weight_decay=0.005 if ("vit" in name.lower() or "clip" in name.lower()) else 1e-4
     )
-
+    # ------------------------------
+    # AMP SCALER
+    # ------------------------------
+    scaler = torch.cuda.amp.GradScaler() 
     # ------------------------------
     # LR Scheduler
     # ------------------------------
@@ -511,19 +515,25 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
         for imgs, labels in tqdm(train_loader, desc=f"Training {name} Epoch {epoch}/{epochs}", leave=False):
             imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
 
-            optimizer.zero_grad()
-            outputs = model(imgs)
-            loss = criterion(outputs, labels)
+            optimizer.zero_grad()  # reset gradients
 
-            loss.backward()
-            optimizer.step()
+            with torch.cuda.amp.autocast():  # mixed precision
+                outputs = model(imgs)
+                loss = criterion(outputs, labels)
 
+            # scale, backward, step, update scaler
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+
+            # track metrics
             total_loss += loss.item() * imgs.size(0)
             correct += (outputs.argmax(1) == labels).sum().item()
             total += labels.size(0)
 
         train_acc = correct / total
         avg_loss = total_loss / total
+
 
         # ------------------------------
         # VALIDATION
