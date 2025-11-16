@@ -672,7 +672,7 @@ model_configs = {
         "img_size": 224,
         "rotation": 0,                # EVA02 prefers minimal aug
         "color_jitter": (0.1, 0.1, 0.05, 0.02),
-        "batch": 24,
+        "batch": 16,
         "epochs": 30,
         "lr": 5e-6
     },
