@@ -517,7 +517,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
 
             optimizer.zero_grad()  # reset gradients
 
-            with torch.cuda.amp.autocast():  # mixed precision
+            with torch.amp.autocast(device_type='cuda'):  # mixed precision
                 outputs = model(imgs)
                 loss = criterion(outputs, labels)
 
