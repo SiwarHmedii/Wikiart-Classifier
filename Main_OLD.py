@@ -81,54 +81,13 @@ sys.stdout = Logger(log_path)
 print(f"📝 Logging to: {log_path}\n")
 
 
-#=========================================================
-# 3️⃣ TRANSFORM FUNCTION (Parametrized for
-#for OpenCLIP ViT-B/16 and ViT-B/16
-#==========================================================
-def get_transforms(model_name, size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0.05)):
+# ==========================================================
+# 3️⃣ TRANSFORM FUNCTION (Parametrized for Each Model)
+# ==========================================================
+def get_transforms(size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0.05)):
     """
-    Returns (train_tf, val_tf) depending on model type.
-    CNNs -> normal augmentations + ImageNet norm
-    ViT (in21k) -> light aug + mean=std=0.5
-    CLIP -> light aug + CLIP normalization
+    Return a tuple (train_tf, val_tf) for the given image size and augmentation params.
     """
-
-    # ===============================
-    # 1) CLIP MODELS
-    # ===============================
-    if "clip" in model_name.lower():
-        clip_mean = (0.48145466, 0.4578275, 0.40821073)
-        clip_std  = (0.26862954, 0.26130258, 0.27577711)
-
-        train_tf = transforms.Compose([
-            transforms.RandomResizedCrop(size, scale=(0.9, 1.0)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(clip_mean, clip_std)
-        ])
-
-        val_tf = transforms.Compose([
-            transforms.Resize((size, size)),
-            transforms.ToTensor(),
-            transforms.Normalize(clip_mean, clip_std)
-        ])
-        return train_tf, val_tf
-
-
-    # ===============================
-    # 2) ViT MODELS (timm ImageNet-21K)
-    # ===============================
-    if "vit" in model_name.lower():
-        cfg = timm.data.resolve_model_data_config(model_name)
-        train_tf = timm.data.create_transform(**cfg, is_training=True)
-        val_tf = timm.data.create_transform(**cfg, is_training=False)
-        return train_tf, val_tf
-
-
-
-    # ===============================
-    # 3) DEFAULT (CNN MODELS)
-    # ===============================
     train_tf = transforms.Compose([
         transforms.RandomResizedCrop(size, scale=(0.7, 1.0)),
         transforms.RandomHorizontalFlip(),
@@ -136,24 +95,17 @@ def get_transforms(model_name, size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0
         transforms.ColorJitter(*color_jitter),
         transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), shear=10),
         transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
+        transforms.Normalize([0.485, 0.456, 0.406],
+                             [0.229, 0.224, 0.225])
     ])
 
     val_tf = transforms.Compose([
         transforms.Resize((size, size)),
         transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
+        transforms.Normalize([0.485, 0.456, 0.406],
+                             [0.229, 0.224, 0.225])
     ])
-
     return train_tf, val_tf
-
-
 
 
 # ==========================================================
@@ -404,14 +356,14 @@ import timm
 
 
 def get_openclip_vitb16(num_classes):
-    return timm.create_model(
-        "vit_base_patch16_clip_224.laion2b",
+       # Load pretrained OpenCLIP ViT-B/16
+    model = timm.create_model(
+        'vit_base_patch16_clip_224.laion2b',  # pretrained on LAION-2B dataset
         pretrained=True,
         num_classes=num_classes
     )
 
-
-
+    return model
 
 
 #===========================================================
@@ -431,104 +383,69 @@ def get_vit_base_in21k(num_classes):
 
 
 # ==========================================================
-# 🔹 5️⃣ Training Function (model-aware CNN / ViT / CLIP)
+# 🔹 5️⃣ Training Function (shared)
 # ==========================================================
 def train_model(model, train_loader, val_loader, epochs, lr, name):
     model.to(DEVICE)
-
-    # ------------------------------
-    # LOSS FUNCTION
-    # ------------------------------
-    # ViT and CLIP should NOT use class weights → harms training
-    if "vit" in name.lower() or "clip" in name.lower():
-        criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-
-    else:
-        criterion = nn.CrossEntropyLoss(weight=loss_weights)
-
-    # ------------------------------
-    # OPTIMIZER
-    # ------------------------------
-    optimizer = optim.AdamW(
-        model.parameters(),
-        lr=lr,
-        weight_decay=0.05 if ("vit" in name.lower() or "clip" in name.lower()) else 1e-4
-    )
-
-    # ------------------------------
-    # LR Scheduler
-    # ------------------------------
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(
-        optimizer,
-        T_max=epochs,
-        eta_min=lr * 0.1
-    )
+    criterion = nn.CrossEntropyLoss(weight=loss_weights)
+    optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=5)
 
     best_val = 0
     patience, counter = 8, 0
 
     for epoch in range(1, epochs + 1):
-        # ------------------------------
-        # TRAINING
-        # ------------------------------
         model.train()
         total_loss, correct, total = 0.0, 0, 0
 
         for imgs, labels in tqdm(train_loader, desc=f"Training {name} Epoch {epoch}/{epochs}", leave=False):
             imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
-
             optimizer.zero_grad()
             outputs = model(imgs)
             loss = criterion(outputs, labels)
-
+            
             loss.backward()
             optimizer.step()
-
             total_loss += loss.item() * imgs.size(0)
             correct += (outputs.argmax(1) == labels).sum().item()
             total += labels.size(0)
 
-        train_acc = correct / total
-        avg_loss = total_loss / total
+        train_acc = correct / total if total > 0 else 0.0
+        avg_loss = total_loss / total if total > 0 else 0.0
 
-        # ------------------------------
-        # VALIDATION
-        # ------------------------------
+        # Validation
         model.eval()
-        val_correct, val_total = 0, 0
-        preds, labels_all = [], []
-        total_val_loss = 0.0
-
+        val_correct, val_total, preds, labels_all = 0, 0, [], []
+        total_val_loss = 0.0 
         with torch.no_grad():
             for imgs, labels in val_loader:
                 imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
                 outputs = model(imgs)
-                val_loss = criterion(outputs, labels)
-
+                val_loss = criterion(outputs, labels) 
                 preds_batch = outputs.argmax(1)
                 val_correct += (preds_batch == labels).sum().item()
                 val_total += labels.size(0)
                 total_val_loss += val_loss.item() * imgs.size(0)
-
                 preds.extend(preds_batch.cpu().numpy())
                 labels_all.extend(labels.cpu().numpy())
 
-        val_acc = val_correct / val_total
-        val_f1 = f1_score(labels_all, preds, average='macro')
-        avg_val_loss = total_val_loss / val_total
+        val_acc = val_correct / val_total if val_total > 0 else 0.0
+        val_f1 = f1_score(labels_all, preds, average='macro') if len(preds) > 0 else 0.0
+        avg_val_loss = total_val_loss / val_total if val_total > 0 else 0.0   
+        scheduler.step(val_acc)
 
-        scheduler.step()
-
-        print(
+        print( 
             f"[{name}] Epoch {epoch}: "
             f"TrainAcc={train_acc:.3f} | ValAcc={val_acc:.3f} | "
             f"TrainLoss={avg_loss:.4f} | ValLoss={avg_val_loss:.4f} | "
             f"F1={val_f1:.3f}"
         )
 
-        # ------------------------------
-        # EARLY STOPPING + SAVE BEST
-        # ------------------------------
+
+
+        # Save the best model
+        
+
         if val_f1 > best_val:
             best_val = val_f1
             counter = 0
@@ -540,9 +457,8 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
                 print("⏹️ Early stopping (no F1 improvement).")
                 break
 
-    print(f"🎯 Best {name} ValAcc: {val_acc:.3f} | ValF1: {best_val:.3f}")
+    print(f"🎯 Best {name} ValAcc: {val_acc:.3f}|ValF1: {best_val:.3f}")
     return model
-
 
 
 # ==========================================================
@@ -622,7 +538,7 @@ model_configs = {
   # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
    #"ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
    #"EfficientNetV2": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
-   "openclip_vitb16": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  # "openclip_vitb16": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
    "vit_base_in21k": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
 }
 
@@ -665,8 +581,7 @@ if __name__ == "__main__":
         model = build_model_by_name(name, NUM_CLASSES, img_size=cfg["img_size"])
 
         # Create transforms for this model (model-specific augmentation)
-        train_tf, val_tf = get_transforms(name, cfg["img_size"], cfg["rotation"], cfg["color_jitter"])
-
+        train_tf, val_tf = get_transforms(cfg["img_size"], cfg["rotation"], cfg["color_jitter"])
 
         # Create loaders using the transforms
         train_loader, val_loader, test_loader = create_loaders(cfg["batch"], train_tf, val_tf)
