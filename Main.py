@@ -17,16 +17,24 @@ from tqdm import tqdm
 
 
 import torch
+torch.cuda.empty_cache()
+print("GPU:", torch.cuda.get_device_name(0))
+print("VRAM Total:", torch.cuda.get_device_properties(0).total_memory / 1024**3, "GB")
 import torch.nn as nn
 import torch.optim as optim
-from torch.cuda.amp import autocast, GradScaler
+from torch import amp
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torchvision import transforms, models
+from torchvision.io import read_image
+import torchvision.transforms.v2 as T
 from PIL import Image
 
+
+import timm
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
-
+torch.backends.cudnn.benchmark = True
+torch.backends.cuda.matmul.allow_tf32 = True
 # ------------------------------
 # 1️⃣ Reproducibility & Device
 # ------------------------------
@@ -86,88 +94,36 @@ print(f"📝 Logging to: {log_path}\n")
 # 3️⃣ TRANSFORM FUNCTION (Parametrized for
 #for OpenCLIP ViT-B/16 and ViT-B/16
 #==========================================================
-def get_transforms(model_name, size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0.05)):
+def get_transforms(model_name, size, rotation, color_jitter):
+    """Return (train_tf, val_tf). Uses a special pipeline for EVA models.
     """
-    Returns (train_tf, val_tf) depending on model type.
-    CNNs -> normal augmentations + ImageNet norm
-    ViT (in21k) -> light aug + mean=std=0.5
-    CLIP -> light aug + CLIP normalization
-    """
-
-    # ===============================
-    # 1) CLIP MODELS
-    # ===============================
-    if "clip" in model_name.lower():
-        clip_mean = (0.48145466, 0.4578275, 0.40821073) #CLIP mean
-        clip_std  = (0.26862954, 0.26130258, 0.27577711) #CLIP std
-
-        train_tf = transforms.Compose([
-            transforms.RandomResizedCrop(size, scale=(0.9, 1.0)), # slight crop
-            transforms.RandomHorizontalFlip(), # horizontal flip
-            transforms.ToTensor(), # to tensor
-            transforms.Normalize(clip_mean, clip_std) # CLIP norm
+    if "eva" in model_name.lower():
+        # Special EVA02 fine-tuning pipeline
+        train_tf = T.Compose([
+            T.RandomResizedCrop(size, scale=(0.8, 1.0)),
+            T.RandomHorizontalFlip(),
+            T.RandomRotation(10),  # fixed small rotation
+            T.ColorJitter(0.3, 0.3, 0.2, 0.1),
+            T.Normalize(
+                mean=[0.48145466, 0.4578275, 0.40821073],
+                std=[0.26862954, 0.26130258, 0.27577711]
+            )
+        ])
+    else:
+        # default pipeline
+        train_tf = T.Compose([
+            T.Resize((size, size)),
+            T.RandomHorizontalFlip(),
+            T.RandomRotation(rotation),
+            T.ColorJitter(*color_jitter),
+            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
-        val_tf = transforms.Compose([
-            transforms.Resize((size, size)),
-            transforms.ToTensor(),
-            transforms.Normalize(clip_mean, clip_std)
-        ])
-        return train_tf, val_tf
-
-
-    # ===============================
-    # 2) ViT MODELS (timm ImageNet-21K)
-    # ===============================
-    if "vit" in model_name.lower():
-        cfg = timm.data.resolve_model_data_config(model_name)
-        train_tf = timm.data.create_transform(**cfg, is_training=True)
-        val_tf = timm.data.create_transform(**cfg, is_training=False)
-        return train_tf, val_tf
-    # ===============================
-    # 2) ViT MODELS (timm ImageNet-21K)
-    # ===============================
-    if "eva02" in model_name.lower():
-        clip_mean = (0.48145466, 0.4578275, 0.40821073)
-        clip_std  = (0.26862954, 0.26130258, 0.27577711)
-
-    train_tf = transforms.Compose([
-        transforms.RandomResizedCrop(size, scale=(0.9, 1.0)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(clip_mean, clip_std)
-    ])
-
-    val_tf = transforms.Compose([
-        transforms.Resize((size, size)),
-        transforms.ToTensor(),
-        transforms.Normalize(clip_mean, clip_std)
-    ])
-    return train_tf, val_tf
-
-
-    # ===============================
-    # 3) DEFAULT (CNN MODELS)
-    # ===============================
-    train_tf = transforms.Compose([
-        transforms.RandomResizedCrop(size, scale=(0.7, 1.0)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(rotation),
-        transforms.ColorJitter(*color_jitter),
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), shear=10),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
-    ])
-
-    val_tf = transforms.Compose([
-        transforms.Resize((size, size)),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
+    val_tf = T.Compose([
+        T.Resize((size, size)),
+        T.Normalize(
+            [0.48145466, 0.4578275, 0.40821073],
+            [0.26862954, 0.26130258, 0.27577711]
         )
     ])
 
@@ -179,6 +135,7 @@ def get_transforms(model_name, size, rotation=20, color_jitter=(0.3, 0.3, 0.2, 0
 # ==========================================================
 # 4️⃣ CUSTOM DATASET CLASS (uses global class_to_idx mapping)
 # ==========================================================
+
 class WikiArtDataset(Dataset):
     """
     Lazily loads images from disk and maps labels using a provided
@@ -188,7 +145,8 @@ class WikiArtDataset(Dataset):
         self.image_paths = list(image_paths)
         self.labels = list(labels)
         self.transform = transform
-        # class_to_idx is provided externally (consistent mapping)
+
+        # mapping must be passed from outside
         self.class_to_idx = class_to_idx
         self.idx_to_class = {v: k for k, v in class_to_idx.items()}
 
@@ -196,13 +154,21 @@ class WikiArtDataset(Dataset):
         return len(self.image_paths)
 
     def __getitem__(self, idx):
-        img = Image.open(self.image_paths[idx]).convert("RGB")
+        # FAST C++ JPEG loader (much faster than Pillow)
+        img = read_image(self.image_paths[idx])  # returns tensor [C,H,W] uint8
+
+        # convert to float for transforms expecting [0, 1]
+        img = img.float() / 255.0
+
+        # map label
         label_str = self.labels[idx]
         label = self.class_to_idx[label_str]
+
+        # apply transforms
         if self.transform:
             img = self.transform(img)
-        return img, label
 
+        return img, label
 
 # ==========================================================
 # 5️⃣ LOAD ALL IMAGES AND LABELS
@@ -286,24 +252,43 @@ loss_weights = torch.tensor(
 # ==========================================================
 # 9️⃣ DATALOADER CREATION FUNCTION (accepts transforms)
 # ==========================================================
-def create_loaders(batch_size, train_tf, val_tf):
+def create_loaders(name, batch_size, train_tf, val_tf):
     """
     Build train/val/test loaders using the global class_to_idx mapping.
-    num_workers=0 for Windows stability. drop_last=True for training to avoid BN with tiny final batch.
-    this version has changed to be ran on WSL so now the num of workers can safely be increased to 8, sinec WSL handles multiprocessing better.
-    8 workers setup is compatible with the machine used (16GB RAM, 4 cores) + NVIDIA GPU.
-    
+    For EVA/CLIP models: shuffle=True instead of sampler (better for these models).
+    For CNN models: use WeightedRandomSampler to balance classes.
     """
+    use_sampler = not ("clip" in name.lower() or "eva" in name.lower())
+    
     train_ds = WikiArtDataset(train_paths, train_labels, class_to_idx=class_to_idx, transform=train_tf)
     val_ds = WikiArtDataset(val_paths, val_labels, class_to_idx=class_to_idx, transform=val_tf)
     test_ds = WikiArtDataset(test_paths, test_labels, class_to_idx=class_to_idx, transform=val_tf)
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size, sampler=sampler,
-                              num_workers=8, pin_memory=True, drop_last=True)
+    if use_sampler:
+        train_loader = DataLoader(
+            train_ds,
+            batch_size=batch_size,
+            sampler=sampler,
+            num_workers=8,
+            pin_memory=True,
+            drop_last=True,
+            persistent_workers=False
+        )
+    else:
+        train_loader = DataLoader(
+            train_ds,
+            batch_size=batch_size,
+            shuffle=True,   # IMPORTANT for EVA/CLIP
+            num_workers=8,
+            pin_memory=True,
+            drop_last=True,
+            persistent_workers=False
+        )
+
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
-                            num_workers=8, pin_memory=True)
+                            num_workers=2, pin_memory=True)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
-                             num_workers=8, pin_memory=True)
+                             num_workers=2, pin_memory=True)
     return train_loader, val_loader, test_loader
 
 
@@ -477,7 +462,6 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
     # ViT and CLIP should NOT use class weights → harms training
     if "vit" in name.lower() or "clip" in name.lower():
         criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-
     else:
         criterion = nn.CrossEntropyLoss(weight=loss_weights)
 
@@ -489,10 +473,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
         lr=lr,
         weight_decay=0.005 if ("vit" in name.lower() or "clip" in name.lower()) else 1e-4
     )
-    # ------------------------------
-    # AMP SCALER
-    # ------------------------------
-    scaler = torch.cuda.amp.GradScaler() 
+
     # ------------------------------
     # LR Scheduler
     # ------------------------------
@@ -502,41 +483,57 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
         eta_min=lr * 0.1
     )
 
-    best_val = 0
+    best_val = 0.0
     patience, counter = 8, 0
 
+    # Safety: gradient clipping and stable FP16 without GradScaler
     for epoch in range(1, epochs + 1):
-        # ------------------------------
-        # TRAINING
-        # ------------------------------
         model.train()
         total_loss, correct, total = 0.0, 0, 0
 
-        for imgs, labels in tqdm(train_loader, desc=f"Training {name} Epoch {epoch}/{epochs}", leave=False):
-            imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
+        try:
+            for imgs, labels in tqdm(train_loader, desc=f"Training {name} Epoch {epoch}/{epochs}", leave=False):
+                # move to device (non_blocking if pin_memory True)
+                imgs = imgs.to(DEVICE, non_blocking=True)
+                labels = labels.to(DEVICE, non_blocking=True)
 
-            optimizer.zero_grad()  # reset gradients
+                # reset gradients faster
+                optimizer.zero_grad(set_to_none=True)
 
-            with torch.amp.autocast(device_type='cuda'):  # mixed precision
-                outputs = model(imgs)
-                loss = criterion(outputs, labels)
+                # Mixed precision autocast (no GradScaler)
+                with amp.autocast(device_type='cuda', dtype=torch.float16):
+                    outputs = model(imgs)
+                    loss = criterion(outputs, labels)
 
-            # scale, backward, step, update scaler
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
+                # backward + step (no scaler)
+                loss.backward()
 
-            # track metrics
-            total_loss += loss.item() * imgs.size(0)
-            correct += (outputs.argmax(1) == labels).sum().item()
-            total += labels.size(0)
+                # Clip gradients — EVA/EVA02 models sometimes benefit from this to avoid instability
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
-        train_acc = correct / total
-        avg_loss = total_loss / total
+                optimizer.step()
 
+                # metrics
+                bs = imgs.size(0)
+                total_loss += loss.item() * bs
+                total += bs
+                correct += (outputs.argmax(1) == labels).sum().item()
+
+        except Exception as e:
+            # Print error and full stack so we can see memory / dataloader issues
+            import traceback, sys
+            print("❗ Exception during training loop:", e)
+            traceback.print_exc(file=sys.stdout)
+            # attempt to free a bit and continue/exit gracefully
+            torch.cuda.empty_cache()
+            raise
+
+        # compute train stats
+        train_acc = correct / total if total > 0 else 0.0
+        avg_loss = total_loss / total if total > 0 else 0.0
 
         # ------------------------------
-        # VALIDATION
+        # VALIDATION (single-device, FP32)
         # ------------------------------
         model.eval()
         val_correct, val_total = 0, 0
@@ -545,7 +542,9 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
 
         with torch.no_grad():
             for imgs, labels in val_loader:
-                imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
+                imgs = imgs.to(DEVICE, non_blocking=True)
+                labels = labels.to(DEVICE, non_blocking=True)
+
                 outputs = model(imgs)
                 val_loss = criterion(outputs, labels)
 
@@ -557,9 +556,9 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
                 preds.extend(preds_batch.cpu().numpy())
                 labels_all.extend(labels.cpu().numpy())
 
-        val_acc = val_correct / val_total
-        val_f1 = f1_score(labels_all, preds, average='macro')
-        avg_val_loss = total_val_loss / val_total
+        val_acc = val_correct / val_total if val_total > 0 else 0.0
+        val_f1 = f1_score(labels_all, preds, average='macro') if len(labels_all) else 0.0
+        avg_val_loss = total_val_loss / val_total if val_total > 0 else 0.0
 
         scheduler.step()
 
@@ -570,9 +569,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
             f"F1={val_f1:.3f}"
         )
 
-        # ------------------------------
-        # EARLY STOPPING + SAVE BEST
-        # ------------------------------
+        # Early stop + save best
         if val_f1 > best_val:
             best_val = val_f1
             counter = 0
@@ -668,14 +665,15 @@ model_configs = {
    #"EfficientNetV2": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
    # "openclip_vitb16": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
   # "vit_base_in21k": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
-   "eva02_base_clip": {
+  "eva02_base_clip": {
         "img_size": 224,
-        "rotation": 0,                # EVA02 prefers minimal aug
-        "color_jitter": (0.1, 0.1, 0.05, 0.02),
-        "batch": 16,
-        "epochs": 30,
-        "lr": 5e-6
-    },
+         "rotation": 10,   # ignored for EVA02, but fine
+         "color_jitter": (0.3, 0.3, 0.2, 0.1),
+         "batch": 16,
+        "epochs": 40,
+        "lr": 1e-5
+}
+
 }
 
 # ==========================================================
@@ -721,9 +719,10 @@ if __name__ == "__main__":
         # Create transforms for this model (model-specific augmentation)
         train_tf, val_tf = get_transforms(name, cfg["img_size"], cfg["rotation"], cfg["color_jitter"])
 
-
         # Create loaders using the transforms
-        train_loader, val_loader, test_loader = create_loaders(cfg["batch"], train_tf, val_tf)
+        train_loader, val_loader, test_loader = create_loaders(
+            name, cfg["batch"], train_tf, val_tf
+        )
 
         # Train
         model = train_model(model, train_loader, val_loader, cfg["epochs"], cfg["lr"], name)
