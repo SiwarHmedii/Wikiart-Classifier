@@ -4,64 +4,94 @@
 # Author: Siwar
 # Description: Flask-based API + Web UI for WikiArt Classification
 #source .venv/bin/activate
-#http://localhost:7860
+#http://localhost:7860# ==========================================================
+# 🌐 WikiArt API - Fancy Image Classification Web App
+# ==========================================================
+# Author: Siwar
+# Description: Flask-based API + Web UI for WikiArt Classification
 # ==========================================================
 
 import os
 import torch
 import torch.nn.functional as F
-from torchvision import transforms, models
 from PIL import Image
 from flask import Flask, request, render_template, jsonify
 from pathlib import Path
 
-
+import timm                   # <-- You MUST import timm now
+from torchvision import transforms
 # ----------------------------
 # 🔧 CONFIGURATION
 # ----------------------------
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-CHECKPOINT_PATH = Path("./checkpoints") / "ResNet50_best.pth"
-NUM_CLASSES = 27  # update with your dataset
-CLASS_NAMES = sorted(os.listdir(Path.home() / "wikiart_project/wikiart"))
+CHECKPOINT_PATH = Path("./checkpoints") / "eva02_base_clip_best.pth"
+
+# These MUST match training, not the current folder state
+NUM_CLASSES = 27
+
+# Load only valid class names (ignore junk folders)
+all_items = sorted(os.listdir(Path.home() / "wikiart_project/wikiart"))
+CLASS_NAMES = [d for d in all_items if not d.startswith(".")][:NUM_CLASSES]
+
 
 # ----------------------------
-# 🧠 LOAD MODEL
+# 🧠 LOAD MODEL  (FIXED FOR EVA02)
 # ----------------------------
 def load_model():
-    model = models.resnet50(weights=None)
-    model.fc = torch.nn.Linear(model.fc.in_features, NUM_CLASSES)
-    model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=DEVICE))
+    # Create the EVA02 Base CLIP model (same number of classes as before)
+    model = timm.create_model(
+        "eva02_base_patch16_clip_224",
+        pretrained=False,
+        num_classes=NUM_CLASSES
+    )
+
+    # Load the checkpoint
+    state = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
+    model.load_state_dict(state)
+
     model.eval().to(DEVICE)
-    print("✅ Model loaded successfully.")
+    print("✅ EVA02 Model loaded successfully.")
     return model
+
 
 model = load_model()
 
-# ----------------------------
-# 🖼️ TRANSFORM FOR INFERENCE
-# ----------------------------
-transform = transforms.Compose([
-    transforms.Resize((256, 256)),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225])
-])
 
 # ----------------------------
-# 🔮 PREDICTION FUNCTION
+# 🖼️ TRANSFORM FOR INFERENCE
+# (MINIMAL CHANGES — same structure, EVA02-correct stats)
+# ----------------------------
+clip_mean = [0.48145466, 0.4578275, 0.40821073]
+clip_std = [0.26862954, 0.26130258, 0.27577711]
+
+transform = transforms.Compose([
+    transforms.Resize(int(224 * 1.14)),  # CLIP resize (~256)
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(clip_mean, clip_std)
+])
+
+
+# ----------------------------
+# 🔮 PREDICTION FUNCTION (UNCHANGED, ONLY MODEL INPUT FIXED)
 # ----------------------------
 def predict_image(image_path):
     img = Image.open(image_path).convert("RGB")
     img_t = transform(img).unsqueeze(0).to(DEVICE)
+
     with torch.no_grad():
         outputs = model(img_t)
         probs = F.softmax(outputs, dim=1)
+
         top_probs, top_idxs = probs.topk(3, dim=1)
+
         top_probs = top_probs.cpu().numpy()[0]
         top_idxs = top_idxs.cpu().numpy()[0]
+
         top_classes = [CLASS_NAMES[i] for i in top_idxs]
+
     return list(zip(top_classes, top_probs))
+
 
 # ==========================================================
 # 🌍 FLASK APP SETUP
@@ -81,13 +111,12 @@ def predict():
     if file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
 
-    # Save uploaded image temporarily
     filepath = os.path.join("static/uploads", file.filename)
     os.makedirs("static/uploads", exist_ok=True)
     file.save(filepath)
 
-    # Run prediction
     preds = predict_image(filepath)
+
     return jsonify({
         "image_path": filepath,
         "predictions": [{"class": c, "prob": float(p)} for c, p in preds]

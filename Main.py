@@ -38,7 +38,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 # ------------------------------
 # 1️⃣ Reproducibility & Device
 # ------------------------------
-SEED = 42
+SEED = 123 #42
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -95,20 +95,28 @@ print(f"📝 Logging to: {log_path}\n")
 #for OpenCLIP ViT-B/16 and ViT-B/16
 #==========================================================
 def get_transforms(model_name, size, rotation, color_jitter):
-    """Return (train_tf, val_tf). Uses a special pipeline for EVA models.
+    """Return (train_tf, val_tf). Uses model-specific pipeline with config parameters.
     """
     if "eva" in model_name.lower():
-        # Special EVA02 fine-tuning pipeline
-        train_tf = T.Compose([
-            T.RandomResizedCrop(size, scale=(0.8, 1.0)),
-            T.RandomHorizontalFlip(),
-            T.RandomRotation(10),  # fixed small rotation
-            T.ColorJitter(0.3, 0.3, 0.2, 0.1),
-            T.Normalize(
-                mean=[0.48145466, 0.4578275, 0.40821073],
-                std=[0.26862954, 0.26130258, 0.27577711]
-            )
-        ])
+        # EVA02 fine-tuning pipeline (uses config parameters)
+        clip_mean = [0.48145466, 0.4578275, 0.40821073]
+        clip_std = [0.26862954, 0.26130258, 0.27577711]
+        
+        # Build transform list conditionally based on config
+        transforms_list = [T.RandomResizedCrop(size, scale=(0.9, 1.0))]
+        transforms_list.append(T.RandomHorizontalFlip())
+        
+        # Add rotation only if config specifies it (> 0)
+        if rotation > 0:
+            transforms_list.append(T.RandomRotation(rotation))
+        
+        # Add color jitter only if config specifies it (not None and values > 0)
+        if color_jitter and any(c > 0 for c in color_jitter):
+            transforms_list.append(T.ColorJitter(*color_jitter))
+        
+        transforms_list.append(T.Normalize(mean=clip_mean, std=clip_std))
+        
+        train_tf = T.Compose(transforms_list)
     else:
         # default pipeline
         train_tf = T.Compose([
@@ -118,14 +126,19 @@ def get_transforms(model_name, size, rotation, color_jitter):
             T.ColorJitter(*color_jitter),
             T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-
-    val_tf = T.Compose([
-        T.Resize((size, size)),
-        T.Normalize(
-            [0.48145466, 0.4578275, 0.40821073],
-            [0.26862954, 0.26130258, 0.27577711]
-        )
-    ])
+    # Validation transforms: use CLIP-style center crop for EVA, simple resize for others
+    if "eva" in model_name.lower():
+        # Resize shorter side to ~1.14*size then center-crop to match training crop behavior
+        val_tf = T.Compose([
+            T.Resize(int(size * 1.14)),
+            T.CenterCrop(size),
+            T.Normalize(mean=clip_mean, std=clip_std)
+        ])
+    else:
+        val_tf = T.Compose([
+            T.Resize((size, size)),
+            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
 
     return train_tf, val_tf
 
@@ -228,9 +241,7 @@ print(f"   ➤ Train: {len(train_paths)}")
 print(f"   ➤ Val:   {len(val_paths)}")
 print(f"   ➤ Test:  {len(test_paths)}\n")
 
-# ==========================================================
-# 8️⃣ HANDLE CLASS IMBALANCE (Weighted Sampler)
-# ==========================================================
+
 # ==========================================================
 # 8️⃣ HANDLE CLASS IMBALANCE (Weighted Sampler + Loss Weights)---->updated
 # ==========================================================
@@ -258,7 +269,8 @@ def create_loaders(name, batch_size, train_tf, val_tf):
     For EVA/CLIP models: shuffle=True instead of sampler (better for these models).
     For CNN models: use WeightedRandomSampler to balance classes.
     """
-    use_sampler = not ("clip" in name.lower() or "eva" in name.lower())
+    use_sampler = not ("eva" in name.lower() or "clip" in name.lower())
+
     
     train_ds = WikiArtDataset(train_paths, train_labels, class_to_idx=class_to_idx, transform=train_tf)
     val_ds = WikiArtDataset(val_paths, val_labels, class_to_idx=class_to_idx, transform=val_tf)
@@ -282,7 +294,7 @@ def create_loaders(name, batch_size, train_tf, val_tf):
             num_workers=8,
             pin_memory=True,
             drop_last=True,
-            persistent_workers=False
+            persistent_workers=True
         )
 
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
@@ -663,16 +675,16 @@ model_configs = {
   # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
    #"ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
    #"EfficientNetV2": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
-   # "openclip_vitb16": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
-  # "vit_base_in21k": {"img_size": 224, "rotation": 25, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+   "openclip_vitb16": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  "vit_base_in21k": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
   "eva02_base_clip": {
         "img_size": 224,
-         "rotation": 10,   # ignored for EVA02, but fine
-         "color_jitter": (0.3, 0.3, 0.2, 0.1),
-         "batch": 16,
+        "rotation": 0,              # 0 = no rotation, set > 0 to enable
+        "color_jitter": (0.1, 0.1, 0.1, 0.05),  # Conservative color jitter for CLIP
+        "batch": 8,
         "epochs": 40,
-        "lr": 1e-5
-}
+        "lr": 5e-6
+  }
 
 }
 
