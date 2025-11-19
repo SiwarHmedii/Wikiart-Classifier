@@ -15,6 +15,9 @@ from pathlib import Path
 from collections import Counter, defaultdict
 from tqdm import tqdm
 
+from torchvision import models
+import torch.nn as nn
+
 
 import torch
 torch.cuda.empty_cache()
@@ -91,54 +94,25 @@ print(f"📝 Logging to: {log_path}\n")
 
 
 #=========================================================
-# 3️⃣ TRANSFORM FUNCTION (Parametrized for
-#for OpenCLIP ViT-B/16 and ViT-B/16
+# 3️⃣ TRANSFORM FUNCTION (Parametrized)
 #==========================================================
 def get_transforms(model_name, size, rotation, color_jitter):
-    """Return (train_tf, val_tf). Uses model-specific pipeline with config parameters.
+    """Return (train_tf, val_tf). Standard pipeline with config parameters.
     """
-    if "eva" in model_name.lower():
-        # EVA02 fine-tuning pipeline (uses config parameters)
-        clip_mean = [0.48145466, 0.4578275, 0.40821073]
-        clip_std = [0.26862954, 0.26130258, 0.27577711]
-        
-        # Build transform list conditionally based on config
-        transforms_list = [T.RandomResizedCrop(size, scale=(0.9, 1.0))]
-        transforms_list.append(T.RandomHorizontalFlip())
-        
-        # Add rotation only if config specifies it (> 0)
-        if rotation > 0:
-            transforms_list.append(T.RandomRotation(rotation))
-        
-        # Add color jitter only if config specifies it (not None and values > 0)
-        if color_jitter and any(c > 0 for c in color_jitter):
-            transforms_list.append(T.ColorJitter(*color_jitter))
-        
-        transforms_list.append(T.Normalize(mean=clip_mean, std=clip_std))
-        
-        train_tf = T.Compose(transforms_list)
-    else:
-        # default pipeline
-        train_tf = T.Compose([
-            T.Resize((size, size)),
-            T.RandomHorizontalFlip(),
-            T.RandomRotation(rotation),
-            T.ColorJitter(*color_jitter),
-            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    # Validation transforms: use CLIP-style center crop for EVA, simple resize for others
-    if "eva" in model_name.lower():
-        # Resize shorter side to ~1.14*size then center-crop to match training crop behavior
-        val_tf = T.Compose([
-            T.Resize(int(size * 1.14)),
-            T.CenterCrop(size),
-            T.Normalize(mean=clip_mean, std=clip_std)
-        ])
-    else:
-        val_tf = T.Compose([
-            T.Resize((size, size)),
-            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+    # Standard pipeline
+    train_tf = T.Compose([
+        T.Resize((size, size)),
+        T.RandomHorizontalFlip(),
+        T.RandomRotation(rotation),
+        T.ColorJitter(*color_jitter),
+        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    
+    # Validation transforms: simple resize
+    val_tf = T.Compose([
+        T.Resize((size, size)),
+        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
 
     return train_tf, val_tf
 
@@ -266,36 +240,21 @@ loss_weights = torch.tensor(
 def create_loaders(name, batch_size, train_tf, val_tf):
     """
     Build train/val/test loaders using the global class_to_idx mapping.
-    For EVA/CLIP models: shuffle=True instead of sampler (better for these models).
-    For CNN models: use WeightedRandomSampler to balance classes.
+    Uses WeightedRandomSampler to balance classes.
     """
-    use_sampler = not ("eva" in name.lower() or "clip" in name.lower())
-
-    
     train_ds = WikiArtDataset(train_paths, train_labels, class_to_idx=class_to_idx, transform=train_tf)
     val_ds = WikiArtDataset(val_paths, val_labels, class_to_idx=class_to_idx, transform=val_tf)
     test_ds = WikiArtDataset(test_paths, test_labels, class_to_idx=class_to_idx, transform=val_tf)
 
-    if use_sampler:
-        train_loader = DataLoader(
-            train_ds,
-            batch_size=batch_size,
-            sampler=sampler,
-            num_workers=4, 
-            pin_memory=False,
-            drop_last=True,
-            persistent_workers=False
-        )
-    else:
-        train_loader = DataLoader(
-            train_ds,
-            batch_size=batch_size,
-            shuffle=True,   # IMPORTANT for EVA/CLIP
-            num_workers=4,
-            pin_memory=False,
-            drop_last=True,
-            persistent_workers=False
-        )
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        sampler=sampler,
+        num_workers=4, 
+        pin_memory=False,
+        drop_last=True,
+        persistent_workers=False
+    )
 
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
                             num_workers=2, pin_memory=False)
@@ -383,40 +342,12 @@ class DeepCNN(nn.Module):
         return self.fc(x)
 
 
-# ==========================================================
-# 🔹 4️⃣ Pretrained Models (ResNet50 / EfficientNetV2)
-# ==========================================================
-'''def get_resnet50(num_classes):
-    model = models.resnet50(weights="IMAGENET1K_V1") #IMAGENET1K_V2
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    return model'''
-
-from torchvision import models
-import torch.nn as nn
-
-def get_resnet50(num_classes):
-    weights = models.ResNet50_Weights.IMAGENET1K_V2  # ✅ correct enum for V2
-    model = models.resnet50(weights=weights)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    return model
-
-
-def get_efficientnet(num_classes):
-    # Use EfficientNetV2-S from torchvision
-    weights = models.EfficientNet_V2_S_Weights.IMAGENET1K_V1  # or None for random init
-    model = models.efficientnet_v2_s(weights=weights)
-    
-    # Replace the classifier
-    in_features = model.classifier[1].in_features
-    model.classifier[1] = nn.Linear(in_features, num_classes)
-    return model
 
 
 
 # ==========================================================
 # ✅ openclip_vitb16 / best#1
 # ==========================================================
-import open_clip
 import timm
 
 
@@ -443,26 +374,6 @@ def get_vit_base_in21k(num_classes):
     return model
 
 # ==========================================================
-# EVA02 Base Patch16 CLIP (224px)
-# ==========================================================
-def get_eva02_base_clip_224(num_classes):
-    """
-    EVA02 Base Patch16 CLIP model with 224px resolution.
-    Outperforms OpenAI CLIP-B/16 and OpenCLIP-B/16.
-    """
-    import timm
-    import torch.nn as nn
-
-    # Load pretrained EVA02 CLIP-B/16 (224px)
-    model = timm.create_model(
-        "eva02_base_patch16_clip_224",
-        pretrained=True,
-        num_classes=num_classes   # automatically replaces the CLIP head
-    )
-
-    return model
-
-# ==========================================================
 # 🔹 5️⃣ Training Function (model-aware CNN / ViT / CLIP)
 # ==========================================================
 def train_model(model, train_loader, val_loader, epochs, lr, name):
@@ -471,11 +382,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
     # ------------------------------
     # LOSS FUNCTION
     # ------------------------------
-    # ViT and CLIP should NOT use class weights → harms training
-    if "vit" in name.lower() or "clip" in name.lower():
-        criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-    else:
-        criterion = nn.CrossEntropyLoss(weight=loss_weights)
+    criterion = nn.CrossEntropyLoss(weight=loss_weights)
 
     # ------------------------------
     # OPTIMIZER
@@ -483,7 +390,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
     optimizer = optim.AdamW(
         model.parameters(),
         lr=lr,
-        weight_decay=0.005 if ("vit" in name.lower() or "clip" in name.lower()) else 1e-4
+        weight_decay=1e-4
     )
 
     # ------------------------------
@@ -517,10 +424,10 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
                     outputs = model(imgs)
                     loss = criterion(outputs, labels)
 
-                # backward + step (no scaler)
+                # Backward + step
                 loss.backward()
 
-                # Clip gradients — EVA/EVA02 models sometimes benefit from this to avoid instability
+                # Clip gradients — prevents training instability
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
                 optimizer.step()
@@ -671,22 +578,11 @@ def evaluate_model(model, loader, class_names):
 # 🔹 7️⃣ Model-Specific Configurations (edit as needed)
 # ==========================================================
 model_configs = {
-   #"SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
-  # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
-   #"ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
-   #"EfficientNetV2": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
- # "openclip_vitb16": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
-  #"vit_base_in21k": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
-  "eva02_base_clip": {
-        "img_size": 224,
-        "rotation": 0,              # 0 = no rotation, set > 0 to enable
-        "color_jitter": (0.1, 0.1, 0.1, 0.05),  # Conservative color jitter for CLIP
-        "batch": 8,
-        "epochs": 40,
-        "lr": 5e-6
+  "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
+  "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
+  "openclip_vitb16": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  "vit_base_in21k": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
   }
-
-}
 
 # ==========================================================
 # 🔹 8️⃣ Model factory (map names to constructors)
@@ -700,17 +596,11 @@ def build_model_by_name(name, num_classes, img_size):
         return SimpleCNN(num_classes, img_size=img_size)
     elif name == "DeepCNN":
         return DeepCNN(num_classes)
-    elif name == "ResNet50":
-        return get_resnet50(num_classes)
-    elif name == "EfficientNetV2":
-        return get_efficientnet(num_classes)
     elif name == "openclip_vitb16":
         return get_openclip_vitb16(num_classes)
     elif name == "vit_base_in21k":
         return get_vit_base_in21k(num_classes)
-    elif name == "eva02_base_clip":
-        return get_eva02_base_clip_224(num_classes)
-        
+            
     else:
         raise ValueError(f"Unknown model name: {name}")
 

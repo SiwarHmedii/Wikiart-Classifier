@@ -24,7 +24,7 @@ from torchvision import transforms
 # 🔧 CONFIGURATION
 # ----------------------------
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-CHECKPOINT_PATH = Path("./checkpoints") / "eva02_base_clip_best.pth"
+CHECKPOINT_PATH = Path("./checkpoints") / "openclip_vitb16_best.pth"
 
 # These MUST match training, not the current folder state
 NUM_CLASSES = 27
@@ -35,12 +35,12 @@ CLASS_NAMES = [d for d in all_items if not d.startswith(".")][:NUM_CLASSES]
 
 
 # ----------------------------
-# 🧠 LOAD MODEL  (FIXED FOR EVA02)
+# 🧠 LOAD MODEL  (OPENCLIP ViT-B/16)
 # ----------------------------
 def load_model():
-    # Create the EVA02 Base CLIP model (same number of classes as before)
+    # Create the OpenCLIP ViT-B/16 model
     model = timm.create_model(
-        "eva02_base_patch16_clip_224",
+        "vit_base_patch16_clip_224",
         pretrained=False,
         num_classes=NUM_CLASSES
     )
@@ -50,7 +50,7 @@ def load_model():
     model.load_state_dict(state)
 
     model.eval().to(DEVICE)
-    print("✅ EVA02 Model loaded successfully.")
+    print("✅ OpenCLIP ViT-B/16 Model loaded successfully.")
     return model
 
 
@@ -59,7 +59,7 @@ model = load_model()
 
 # ----------------------------
 # 🖼️ TRANSFORM FOR INFERENCE
-# (MINIMAL CHANGES — same structure, EVA02-correct stats)
+# (OpenCLIP ViT-B/16 uses CLIP normalization stats)
 # ----------------------------
 clip_mean = [0.48145466, 0.4578275, 0.40821073]
 clip_std = [0.26862954, 0.26130258, 0.27577711]
