@@ -1,0 +1,48 @@
+========== DATASET SUMMARY ==========
+Total classes: 27
+Total images: 81444
+Class counts:
+Naive_Art_Primitivism          2405
+Romanticism                    7019
+Expressionism                  6736
+Minimalism                     1337
+Synthetic_Cubism                216
+Early_Renaissance              1391
+Ukiyo_e                        1167
+Pop_Art                        1483
+Cubism                         2235
+Pointillism                     513
+Fauvism                         934
+Realism                       10733
+New_Realism                     314
+Rococo                         2089
+Baroque                        4240
+Color_Field_Painting           1615
+Northern_Renaissance           2552
+Post_Impressionism             6450
+Contemporary_Realism            481
+Analytical_Cubism               110
+Symbolism                      4528
+High_Renaissance               1343
+Action_painting                  98
+Mannerism_Late_Renaissance     1279
+Art_Nouveau_Modern             4334
+Impressionism                 13060
+Abstract_Expressionism         2782
+dtype: int64
+
+⚠️ WARNING: Dataset is imbalanced! Consider weighted sampling.
+
+Image size statistics (WxH):
+Width: mean=1645.2, min=1381, max=15754, outliers=2255
+Height: mean=1659.8, min=1381, max=17768, outliers=2092
+
+========== AUTOMATED CONCLUSIONS ==========
+- Classes are imbalanced. Consider weighted sampling or augmentation.
+- WeightedRandomSampler applied: train batches now balanced (see plot).
+- Detected image size outliers. Width threshold: [692,2532], Height threshold: [692,2532]
+- ⚠️ Train split shows class imbalance.
+- ⚠️ Validation split shows class imbalance.
+- ⚠️ Test split shows class imbalance.
+- Total classes: 27, total images: 81444
+- Sample grid saved to data_description/sample_grid.png

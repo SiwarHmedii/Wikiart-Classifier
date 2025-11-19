@@ -228,7 +228,7 @@ train_paths, test_paths, train_labels, test_labels = train_test_split(
     all_images, all_labels, test_size=0.15, stratify=all_labels, random_state=SEED)
 train_paths, val_paths, train_labels, val_labels = train_test_split(
     train_paths, train_labels, test_size=0.15, stratify=train_labels, random_state=SEED)
-
+# Now we have train (72%), val (15%), test (15%)
 # Create a consistent class -> idx mapping used by ALL datasets
 class_names = sorted(list(set(all_labels)))
 class_to_idx = {cls: i for i, cls in enumerate(class_names)}
@@ -281,8 +281,8 @@ def create_loaders(name, batch_size, train_tf, val_tf):
             train_ds,
             batch_size=batch_size,
             sampler=sampler,
-            num_workers=8,
-            pin_memory=True,
+            num_workers=4, 
+            pin_memory=False,
             drop_last=True,
             persistent_workers=False
         )
@@ -291,16 +291,16 @@ def create_loaders(name, batch_size, train_tf, val_tf):
             train_ds,
             batch_size=batch_size,
             shuffle=True,   # IMPORTANT for EVA/CLIP
-            num_workers=8,
-            pin_memory=True,
+            num_workers=4,
+            pin_memory=False,
             drop_last=True,
-            persistent_workers=True
+            persistent_workers=False
         )
 
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
-                            num_workers=2, pin_memory=True)
+                            num_workers=2, pin_memory=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
-                             num_workers=2, pin_memory=True)
+                             num_workers=2, pin_memory=False)
     return train_loader, val_loader, test_loader
 
 
@@ -322,16 +322,16 @@ class SimpleCNN(nn.Module):
 
         # Dynamically compute flattened feature dimension for the classifier
         with torch.no_grad():
-            dummy = torch.zeros(1, 3, img_size, img_size)
-            n_features = self.features(dummy).view(1, -1).shape[1]
+            dummy = torch.zeros(1, 3, img_size, img_size) # create dummy input
+            n_features = self.features(dummy).view(1, -1).shape[1] # flatten size
 
         self.classifier = nn.Sequential(
-            nn.Dropout(0.3),
-            nn.Linear(n_features, 512),
-            nn.ReLU(),
-            nn.BatchNorm1d(512),
-            nn.Dropout(0.3),
-            nn.Linear(512, num_classes)
+            nn.Dropout(0.3), # prevent overfitting
+            nn.Linear(n_features, 512), # hidden layer
+            nn.ReLU(), # activation
+            nn.BatchNorm1d(512), # normalize
+            nn.Dropout(0.3), # prevent overfitting
+            nn.Linear(512, num_classes) # output layer
         )
 
     def forward(self, x):
@@ -675,8 +675,8 @@ model_configs = {
   # "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
    #"ResNet50": {"img_size": 224, "rotation": 30, "color_jitter": (0.4, 0.4, 0.2, 0.1), "batch": 16, "epochs": 40, "lr": 2e-5}, #40
    #"EfficientNetV2": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 16, "epochs": 50, "lr": 1e-4}, #50
-   "openclip_vitb16": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
-  "vit_base_in21k": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+ # "openclip_vitb16": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  #"vit_base_in21k": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
   "eva02_base_clip": {
         "img_size": 224,
         "rotation": 0,              # 0 = no rotation, set > 0 to enable
