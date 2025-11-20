@@ -361,3 +361,174 @@ class DeepCNN(nn.Module):
 
 
 
+# ==========================================================
+# ✅ openclip_vitb16 / best#1
+# ==========================================================
+import timm
+
+
+def get_openclip_vitb16(num_classes):
+    return timm.create_model(
+        "vit_base_patch16_clip_224.laion2b",
+        pretrained=True,
+        num_classes=num_classes
+    )
+
+#===========================================================
+#Vision Transformer (ViT-B/16) pretrained on ImageNet-21K.
+#=============================================================
+def get_vit_base_in21k(num_classes):
+    """
+    Vision Transformer (ViT-B/16) pretrained on ImageNet-21K.
+    Excellent generalization and color/style awareness.
+    """
+    model = timm.create_model(
+        'vit_base_patch16_224_in21k',  # ViT-B/16 pretrained on ImageNet-21K
+        pretrained=True,
+        num_classes=num_classes        # replaces head automatically
+    )
+    return model
+
+# ==========================================================
+# 🔹 5️⃣ Training Function (model-aware CNN / ViT / CLIP)
+# ==========================================================
+def train_model(model, train_loader, val_loader, epochs, lr, name):
+    model.to(DEVICE)
+
+    # ------------------------------
+    # LOSS FUNCTION
+    # ------------------------------
+    criterion = nn.CrossEntropyLoss(weight=loss_weights)
+
+    # ------------------------------
+    # OPTIMIZER
+    # ------------------------------
+    optimizer = optim.AdamW(
+        model.parameters(),
+        lr=lr,
+        weight_decay=1e-4
+    )
+
+    # ------------------------------
+    # LR Scheduler
+    # ------------------------------
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=epochs,
+        eta_min=lr * 0.1
+    )
+
+    best_val = 0.0
+    patience, counter = 8, 0
+
+    # Safety: gradient clipping and stable FP16 without GradScaler
+    for epoch in range(1, epochs + 1):
+        model.train()
+        total_loss, correct, total = 0.0, 0, 0
+
+        try:
+            for imgs, labels in tqdm(train_loader, desc=f"Training {name} Epoch {epoch}/{epochs}", leave=False):
+                # move to device (non_blocking if pin_memory True)
+                imgs = imgs.to(DEVICE, non_blocking=True)
+                labels = labels.to(DEVICE, non_blocking=True)
+
+                # reset gradients faster
+                optimizer.zero_grad(set_to_none=True)
+
+                # Mixed precision autocast on CUDA only
+                if DEVICE.type == 'cuda':
+                    with amp.autocast():
+                        outputs = model(imgs)
+                        loss = criterion(outputs, labels)
+                else:
+                    outputs = model(imgs)
+                    loss = criterion(outputs, labels)
+
+                # Backward + step
+                loss.backward()
+
+                # Clip gradients — prevents training instability
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+                optimizer.step()
+
+                # metrics
+                bs = imgs.size(0)
+                total_loss += loss.item() * bs
+                total += bs
+                correct += (outputs.argmax(1) == labels).sum().item()
+
+        except Exception as e:
+            # Print error and full stack so we can see memory / dataloader issues
+            import traceback, sys
+            print("❗ Exception during training loop:", e)
+            traceback.print_exc(file=sys.stdout)
+            # attempt to free a bit and continue/exit gracefully
+            torch.cuda.empty_cache()
+            raise
+
+        # compute train stats
+        train_acc = correct / total if total > 0 else 0.0
+        avg_loss = total_loss / total if total > 0 else 0.0
+
+        # ------------------------------
+        # VALIDATION (single-device, FP32)
+        # ------------------------------
+        model.eval()
+        val_correct, val_total = 0, 0
+        preds, labels_all = [], []
+        total_val_loss = 0.0
+
+        with torch.no_grad():
+            for imgs, labels in val_loader:
+                imgs = imgs.to(DEVICE, non_blocking=True)
+                labels = labels.to(DEVICE, non_blocking=True)
+
+                if DEVICE.type == 'cuda':
+                    with amp.autocast():
+                        outputs = model(imgs)
+                        val_loss = criterion(outputs, labels)
+                else:
+                    outputs = model(imgs)
+                    val_loss = criterion(outputs, labels)
+
+                preds_batch = outputs.argmax(1)
+                val_correct += (preds_batch == labels).sum().item()
+                val_total += labels.size(0)
+                total_val_loss += val_loss.item() * imgs.size(0)
+
+                preds.extend(preds_batch.cpu().numpy())
+                labels_all.extend(labels.cpu().numpy())
+
+        val_acc = val_correct / val_total if val_total > 0 else 0.0
+        val_f1 = f1_score(labels_all, preds, average='macro') if len(labels_all) else 0.0
+        avg_val_loss = total_val_loss / val_total if val_total > 0 else 0.0
+
+        scheduler.step()
+
+        print(
+            f"[{name}] Epoch {epoch}: "
+            f"TrainAcc={train_acc:.3f} | ValAcc={val_acc:.3f} | "
+            f"TrainLoss={avg_loss:.4f} | ValLoss={avg_val_loss:.4f} | "
+            f"F1={val_f1:.3f}"
+        )
+
+        # Early stop + save best
+        if val_f1 > best_val:
+            best_val = val_f1
+            counter = 0
+            torch.save(model.state_dict(), CHECKPOINT_DIR / f"{name}_best.pth")
+            print(f"✅ Best {name} model saved (F1={best_val:.3f})!")
+        else:
+            counter += 1
+            if counter >= patience:
+                print("⏹️ Early stopping (no F1 improvement).")
+                break
+
+    print(f"🎯 Best {name} ValAcc: {val_acc:.3f} | ValF1: {best_val:.3f}")
+    return model
+
+
+
+
+
