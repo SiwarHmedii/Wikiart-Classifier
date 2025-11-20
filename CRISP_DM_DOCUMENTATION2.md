@@ -729,7 +729,6 @@ Voici les architectures visuelles détaillées pour tous les modèles :
 WikiArt Classification - Architectures des Modèles
 🏗️ Diagrammes Architecturaux Détaillés
 1. SimpleCNN - Architecture Légère
-text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      SIMPLECNN ARCHITECTURE                     │
 │              Paramètres: ~2M | F1-Score: ~48%                  │
@@ -791,6 +790,9 @@ OUTPUT: [27] (Logits)
 
 PROGRESSION DES DIMENSIONS:
 [3,224,224] → [32,112,112] → [64,56,56] → [128,28,28] → 100,352 → 512 → 27
+
+
+
 2. DeepCNN - Architecture Profonde
 text
 ┌─────────────────────────────────────────────────────────────────┐
@@ -2326,7 +2328,7 @@ Improvement: +12 F1 points for rare classes
 Phase 4: Modeling
 🏗️ Detailed Model Architectures
 1. SimpleCNN - Lightweight From Scratch Architecture
-text
+```mermaid
 ┌─────────────────────────────────────────────────────────────────┐
 │                      SIMPLECNN ARCHITECTURE                     │
 │              Parameters: ~2M | F1-Score: ~48%                  │
@@ -2598,6 +2600,7 @@ INPUT: [3, 224, 224]
 │ LayerNorm                       │
 │ Linear(768→27)                  │  ← Classification
 └─────────────────────────────────┘
+```
 
 ATTENTION MECHANISM:
 Q = XW_q, K = XW_k, V = XW_v
