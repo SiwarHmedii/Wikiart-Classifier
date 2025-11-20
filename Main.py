@@ -20,9 +20,13 @@ import torch.nn as nn
 
 
 import torch
-torch.cuda.empty_cache()
-print("GPU:", torch.cuda.get_device_name(0))
-print("VRAM Total:", torch.cuda.get_device_properties(0).total_memory / 1024**3, "GB")
+# Clear cache only if CUDA available
+if torch.cuda.is_available():
+    try:
+        torch.cuda.empty_cache()
+    except Exception:
+        pass
+
 import torch.nn as nn
 import torch.optim as optim
 from torch import amp
@@ -41,13 +45,22 @@ torch.backends.cuda.matmul.allow_tf32 = True
 # ------------------------------
 # 1️⃣ Reproducibility & Device
 # ------------------------------
-SEED = 123 #42
+SEED = 123
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
-#It checks if a CUDA-enabled GPU is available and sets DEVICE to "cuda"; otherwise, it uses the CPU.
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")   
+
+# Device selection
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"✅ Using device: {DEVICE}")
+
+# Print GPU details only if available (defensive)
+if DEVICE.type == 'cuda':
+    try:
+        print("GPU:", torch.cuda.get_device_name(0))
+        print("VRAM Total:", torch.cuda.get_device_properties(0).total_memory / 1024**3, "GB")
+    except Exception as e:
+        print("GPU info unavailable:", e)
 
 # ------------------------------
 # 2️⃣ Paths & Constants
@@ -419,8 +432,12 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
                 # reset gradients faster
                 optimizer.zero_grad(set_to_none=True)
 
-                # Mixed precision autocast (no GradScaler)
-                with amp.autocast(device_type='cuda', dtype=torch.float16):
+                # Mixed precision autocast on CUDA only
+                if DEVICE.type == 'cuda':
+                    with amp.autocast():
+                        outputs = model(imgs)
+                        loss = criterion(outputs, labels)
+                else:
                     outputs = model(imgs)
                     loss = criterion(outputs, labels)
 
@@ -464,8 +481,13 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
                 imgs = imgs.to(DEVICE, non_blocking=True)
                 labels = labels.to(DEVICE, non_blocking=True)
 
-                outputs = model(imgs)
-                val_loss = criterion(outputs, labels)
+                if DEVICE.type == 'cuda':
+                    with amp.autocast():
+                        outputs = model(imgs)
+                        val_loss = criterion(outputs, labels)
+                else:
+                    outputs = model(imgs)
+                    val_loss = criterion(outputs, labels)
 
                 preds_batch = outputs.argmax(1)
                 val_correct += (preds_batch == labels).sum().item()

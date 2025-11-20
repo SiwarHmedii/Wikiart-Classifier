@@ -32,799 +32,231 @@ Key results (best performing configuration):
 - Dataset: 81,444 images across 27 classes
 
 Primary engineering wins:
-- Focused transfer learning (Vision Transformers) outperforms CNNs by ~5–6% F1.
-- Conservative augmentation for pre‑trained models preserved semantics and improved generalization.
-- Class imbalance mitigated with a combination of WeightedRandomSampler and loss weighting.
+
+# WikiArt Classification — CRISP‑DM Documentation (Academic)
+
+Author: Siwar
+Date: November 2025
+Project: WikiArt Art Style Classification Using Deep Learning
+
+This document consolidates the CRISP‑DM phases for the WikiArt classifier. It is written for an academic audience: concise, reproducible, and focused on methods and results (no financial analysis).
+
+Table of contents
+- Executive summary
+- Phase 1 — Business understanding
+- Phase 2 — Data understanding (with figures)
+- Phase 3 — Data preparation
+- Phase 4 — Modeling
+- Phase 5 — Evaluation
+- Phase 6 — Deployment
+- Technical specifications
+- Conclusions & recommendations
+- Appendix (EDA assets & logs)
 
 ---
 
-## Phase 1 — Business Understanding
+## Executive summary
 
-Problem statement
-- Automatic classification of paintings into 27 styles (e.g., Impressionism, Cubism, Baroque).
+- Objective: automated classification of 27 art styles from WikiArt images.
+- Dataset: 81,444 images, 27 classes.
+- Best model: ViT‑B/16 (ImageNet‑21K) — Macro F1 = 66.9% (primary metric).
+- Inference latency (single image, GPU): ~50 ms (optimized pipeline).
 
-Academic goals
-- Reproducible pipeline comparing CNNs and modern Transformer‑based image encoders.
-- Emphasis on interpretability of errors (confusion across historically close styles).
-
-Success criteria
-- Macro F1 ≥ 65% (target met: 66.9%).
-
-Stakeholders
-- Data Science: modeling and evaluation.
-- Web/Systems: deployment and inference API.
-- Domain experts (art historians): validation of confusions and edge cases.
+Key engineering decisions
+- Transfer learning with Vision Transformers produced the best generalization.
+- Conservative augmentations for pretrained models preserved semantic cues and improved F1.
+- Combined WeightedRandomSampler + loss weighting reduced minority‑class performance gap.
 
 ---
 
-## Phase 2 — Data Understanding
+## Phase 1 — Business understanding
 
-Dataset summary
-- Source: WikiArt dataset (curated for this project)
+Problem: classify paintings into 27 styles (multi‑class). Academic success criterion: Macro F1 ≥ 65%.
+
+Stakeholders: data science (modeling), systems (deployment), domain experts (validation of confusions).
+
+---
+
+## Phase 2 — Data understanding
+
+Summary
+- Source: WikiArt dataset (curated)
 - Total images: 81,444
-- Total classes: 27
+- Classes: 27
 
-Representative class counts (selected extremes and common classes):
-
+Representative counts
 ```
-Impressionism                 13060
-Realism                       10733
-Post_Impressionism             6450
-Romanticism                    7019
-Abstract_Expressionism         2782
-Art_Nouveau_Modern             4334
-Pointillism                     513
-Analytical_Cubism               110
+Impressionism           13060
+Realism                 10733
+Post_Impressionism      6450
+Romanticism             7019
+Art_Nouveau_Modern      4334
+Analytical_Cubism         110
+Pointillism               513
 ```
 
-Notes from automated EDA (see `data_description/eda_report.txt`):
-- Dataset is imbalanced — ratio between most and least frequent classes ≈ 60x in raw counts; after selection it is smaller but still significant.
-- Image size statistics show large outliers (extremely large image dimensions). A size threshold and consistent resizing policy are necessary.
+Notes from automated EDA (`data_description/eda_report.txt`): dataset is imbalanced; many high‑resolution images and several outliers in image size.
 
-
-Class distribution (visuals):
-
+Class distribution (figures)
 ![Overall class distribution](data_description/overall_class_distribution.png)
 
-Before / after applying weighted sampling (train set):
-
+Before / after sampling (train)
 ![Before sampler](data_description/class_distribution_before_sampler.png)
 ![After sampler](data_description/class_distribution_after_sampler.png)
 
-Image quality and size
-
+Image size diagnostics
 ![Image size histogram](data_description/image_size_hist.png)
 ![Image size boxplot](data_description/image_size_boxplot.png)
 
-Sample images
-
+Sample grid
 ![Representative sample grid](data_description/sample_grid.png)
-
-Notes: image inputs are resized to 224×224 with an aspect-aware policy (padding or center crop based on model family).
-
-Appendix (full EDA output): `data_description/eda_report.txt`
 
 ---
 
-## Phase 3 — Data Preparation
+## Phase 3 — Data preparation
 
-Train/val/test split
-- Stratified split to preserve class distributions across splits.
-- Final ratios used: Train 72% (58,842 images), Validation 12.75% (10,385 images), Test 15.25% (12,217 images).
-- Reproducibility: random seed = 123.
+Train/validation/test splits (stratified)
+
+| Split | Count | Fraction |
+|---|---:|---:|
+| Train | 58,842 | 72.00% |
+| Validation | 10,385 | 12.75% |
+| Test | 12,217 | 15.25% |
+
+Reproducibility: seed = 123.
 
 Preprocessing
-- Fast loader: `torchvision.io.read_image` (C++ decoder) improved throughput versus `PIL.Image.open` on large batches.
-- Per‑model normalization (use ImageNet stats for CNNs, CLIP stats for CLIP/ViT fine‑tuning).
+- Use `torchvision.io.read_image` for fast C++ decoding where available.
+- Resize/crop policy: models use 224×224 input. Use aspect‑aware resizing with center crop for validation and conservative random crops for training (for Transformers).
 
-Transforms (examples)
-- ViT / CLIP (conservative): RandomResizedCrop(224, scale=(0.9,1.0)), RandomHorizontalFlip, ColorJitter(0.1), Normalize(CLIP_MEAN, CLIP_STD)
-- CNNs (standard): Resize(256), RandomCrop(224), RandomHorizontalFlip, RandomRotation(±15°), Normalize(IMAGENET_MEAN, IMAGENET_STD)
-- Validation: Resize(≈256), CenterCrop(224), Normalize(model_stats)
+Normalization
+- CNNs (ImageNet stats): mean = [0.485, 0.456, 0.406]; std = [0.229, 0.224, 0.225]
+- CLIP/ViT: mean = [0.48145466, 0.4578275, 0.40821073]; std = [0.26862954, 0.26130258, 0.27577711]
+
+Augmentation strategies
+- Transformers: RandomResizedCrop(224, scale=(0.9, 1.0)), RandomHorizontalFlip, ColorJitter(small)
+- CNNs: Resize(256), RandomCrop(224), RandomHorizontalFlip, RandomRotation(±15°), ColorJitter
 
 Imbalance handling
 - WeightedRandomSampler for balanced mini‑batches.
-- Loss weighting using class weights computed as w_c = 1 / sqrt(n_c) (stabilizes extremes while avoiding excessive weight on extremely rare classes).
-- Observed impact: improvements on minority class F1 by ~12 percentage points in ablations.
-
-DataLoader best practices
-- `pin_memory=True`, `num_workers=4` (tune to host environment), `persistent_workers` as needed for long training runs.
+- Loss weighting: class weight w_c = 1 / sqrt(n_c).
 
 ---
 
 ## Phase 4 — Modeling
 
 Model families evaluated
-- From‑scratch CNNs: SimpleCNN, DeepCNN (baseline and engineered).
-- Pretrained CNNs: ResNet50, EfficientNetV2‑S (fine‑tuned heads).
-- Transformer encoders: ViT‑B/16 (ImageNet‑21K), OpenCLIP ViT‑B/16, EVA02‑CLIP.
+- From‑scratch: SimpleCNN (≈2M params), DeepCNN (≈15M params)
+- Pretrained CNNs: ResNet50, EfficientNetV2‑S
+- Transformer encoders: ViT‑B/16 (in21k), OpenCLIP ViT‑B/16, EVA02‑CLIP
 
-Summary of the best configurations
-- ViT‑B/16 (ImageNet‑21K): Macro F1 = 66.9% (best overall)
-- EVA02‑CLIP: Macro F1 ≈ 66.0%
-- OpenCLIP ViT‑B/16: Macro F1 ≈ 65.2%
-- ResNet50 (fine‑tuned): Macro F1 ≈ 61.8%
+Model comparison (concise)
 
-Typical training recipe
-- Optimizer: AdamW
-- LR schedule: CosineAnnealingLR (T_max = epochs)
-- Label smoothing (0.1), gradient clipping (max_norm=1.0), early stopping patience=8 on validation F1
-- Mixed precision (torch.cuda.amp) to reduce memory and speed training
+| Model | Params (approx) | Macro F1 | Key property |
+|---|---:|---:|---|
+| SimpleCNN | ~2M | ~48% | Lightweight from‑scratch baseline |
+| DeepCNN | ~15M | ~55% | AdaptiveAvgPool, deeper conv blocks |
+| ResNet50 | ~25M | 61.8% | Residual connections, strong baseline |
+| EfficientNetV2‑S | ~21M | 60.5% | Efficient scaling |
+| ViT‑B/16 (in21k) | ~86M | 66.9% | Global attention — best overall |
+| OpenCLIP ViT‑B/16 | ~86M | 65.2% | Contrastive pretraining |
+| EVA02‑CLIP | ~86M | 66.0% | Improved init & regularization |
 
-Architectural highlights
-- SimpleCNN: 3 conv blocks, dynamic flattening for flexibility (≈2M params).
-- DeepCNN: 4 conv blocks + adaptive pooling (≈15M params).
-- ViT‑B/16: patch size 16, embed dim 768, 12 transformer blocks — benefits from global attention for stylistic context.
+Training recipe highlights
+- Optimizer: AdamW; scheduler: CosineAnnealingLR (T_max = epochs)
+- Label smoothing = 0.1, gradient clipping (max_norm=1.0), early stopping (patience=8 on val F1)
+- Mixed precision training (FP16) when running on CUDA devices
 
-Engineering choices and rationale
-- Conservative augmentations for pre‑trained Transformers preserve learned semantics and improved F1 by ≈1.6% vs aggressive augmentations.
-- AdaptiveAvgPool in deep CNNs was used to make classifiers invariant to small variation in input size.
+Example hyperparameters table
+
+| Model | LR | Batch | Epochs | Weight decay |
+|---|---:|---:|---:|---:|
+| SimpleCNN | 5e-4 | 128 | 50 | 1e-4 |
+| DeepCNN | 5e-4 | 32 | 70 | 1e-4 |
+| ViT‑B/16 | 1e-5 | 16 | 40 | 1e-4 |
 
 ---
 
 ## Phase 5 — Evaluation
 
-Primary metrics
-- Macro F1 (primary): 66.9% (ViT‑B/16)
-- Micro F1 / Accuracy: ~67.4% / 67.0%
+Primary metrics (best model — ViT‑B/16)
 
-Per‑class performance (high level)
-- High performing classes (F1 > 75%): Abstract Expressionism, Romanticism, Cubism, Expressionism
-- Challenging classes (F1 < 55%): Art Nouveau Modern, Early Renaissance, Color Field Painting
+| Metric | Value |
+|---|---:|
+| Macro F1 | 66.9% |
+| Micro F1 / Accuracy | 67.4% / 67.0% |
 
-Confusion patterns and interpretation
-- Temporal adjacency confusions: Impressionism ↔ Post‑Impressionism (common errors due to stylistic proximity).
-- Low‑signal styles (e.g., Color Field Painting) often confuse with abstract categories.
-- The model's confidence calibration: high‑confidence bins (>90%) are accurate ≈89.2% of the time; low‑confidence predictions correspond to difficult examples.
+Per‑class observations
+- Strong: Abstract Expressionism, Romanticism, Cubism, Expressionism
+- Weak: Art Nouveau Modern, Early Renaissance, Color Field Painting
 
-Visual diagnostics (available files)
-- Confusion matrix and class distribution plots: `data_description/overall_class_distribution.png`, `data_description/class_distribution_before_sampler.png`, `data_description/class_distribution_after_sampler.png`.
-
-Representative evaluation notes (logs)
-- Best epoch convergence for ViT: epoch 11 (≈3.1 h training wall time on target GPU).
-- Typical training times: 2–3.5 h per run (model dependent).
+Confusion patterns — interpretation
+- Temporal adjacency (Impressionism vs Post‑Impressionism) explains many confusions.
+- Low‑signal styles tend to be confused with broader abstract categories.
 
 ---
 
 ## Phase 6 — Deployment
 
-Inference pipeline (production contract)
-1. Receive image (multipart/form upload) at `/predict`.
-2. Validate and convert to RGB.
-3. Apply model preprocessing (resize/crop + normalize).
-4. Forward pass with torch.no_grad() and FP16 autocast if available.
-5. Return top‑k classes with probabilities.
+Inference contract (production)
+1. POST `/predict` multipart/form-data with image file.
+2. Convert to RGB, apply model preprocessing.
+3. Forward pass under `torch.no_grad()`; use autocast only when CUDA is available.
+4. Return top‑k predictions as JSON.
 
-Minimal Flask example (implementation sketch)
+Minimal Flask sketch
 ```python
-from flask import Flask, request, jsonify
-from PIL import Image
-import torch
-
-app = Flask(__name__)
-
 @app.route('/predict', methods=['POST'])
 def predict():
-        file = request.files['file']
-        img = Image.open(file.stream).convert('RGB')
-        img_t = transform(img).unsqueeze(0).to(DEVICE)
-        with torch.no_grad():
-                with torch.cuda.amp.autocast(enabled=True):
-                        logits = model(img_t)
-                        probs = torch.softmax(logits, dim=1)
-        top_probs, top_idxs = probs.topk(5, dim=1)
-        return jsonify([{'class': CLASS_NAMES[i], 'prob': float(p)} for i, p in zip(top_idxs[0].cpu().tolist(), top_probs[0].cpu().tolist())])
+    file = request.files.get('file')
+    if file is None:
+        return jsonify({'error': 'no file uploaded'}), 400
+    img = Image.open(file.stream).convert('RGB')
+    img_t = transform(img).unsqueeze(0).to(DEVICE)
+    with torch.no_grad():
+        if DEVICE.type == 'cuda':
+            with torch.cuda.amp.autocast():
+                logits = model(img_t)
+        else:
+            logits = model(img_t)
+        probs = torch.softmax(logits, dim=1)
+    top_probs, top_idxs = probs.topk(5, dim=1)
+    return jsonify([{'class': CLASS_NAMES[i], 'prob': float(p)} for i, p in zip(top_idxs[0].cpu().tolist(), top_probs[0].cpu().tolist())])
 ```
 
-Latency notes
-- Typical end‑to‑end latency: 50–60 ms (GPU) with optimized loader and FP16.
+---
+
+## Technical specifications
+
+Key dependencies (pin for reproducibility)
+- `torch`, `torchvision`, `timm`, `scikit-learn`, `flask`, `Pillow`, `numpy`, `matplotlib`
+
+Runtime tips
+- Set `torch.backends.cudnn.benchmark = True` for mixed image sizes.
+- Use `torch.cuda.amp` only when CUDA is available.
 
 ---
 
-## Technical Specifications
+## Conclusions & recommendations
 
-Core dependencies (pin versions for reproducibility)
-- `torch==2.5.1+cu121` (or appropriate GPU build)
-- `torchvision==0.20.1`
-- `timm` (model zoo and helper utilities)
-- `flask` (simple inference API)
-- `scikit-learn` (metrics, splits)
-
-Performance & runtime choices
-- `torch.backends.cudnn.benchmark = True` for varied input sizes
-- Mixed precision training/inference with `torch.cuda.amp`
-- DataLoader: `pin_memory=True`, `num_workers` tuned to environment
-
-Checkpoints
-- Recommended checkpoint layout (example):
-    `checkpoints/vit_base_in21k_best.pth` (production model)
+- Academic success: Macro F1 target met; ViT‑based transfer learning recommended for follow‑up work.
+- Next steps: attention‑map explainability, focused fine‑tuning per difficult class, potential ensembling.
 
 ---
 
-## Conclusions & Recommendations
+## Appendix — EDA assets & logs
+
+Files (relative to repo root):
+- `data_description/eda_report.txt`
+- `data_description/overall_class_distribution.png`
+- `data_description/class_distribution_before_sampler.png`
+- `data_description/class_distribution_after_sampler.png`
+- `data_description/image_size_hist.png`
+- `data_description/image_size_boxplot.png`
+- `data_description/sample_grid.png`
+
+If you want more inline figures or to include log excerpts (train logs), tell me which files and I will embed them.
 
-Conclusions
-- The academic objective (Macro F1 ≥ 65%) is met; ViT‑based transfer learning is the best performing approach for this dataset.
-- Conservative augmentations and careful imbalance mitigation materially improved minority class performance.
-
-Recommendations (next steps)
-- Fine‑tune with domain‑specific augmentation and curriculum sampling for borderline classes.
-- Add attention‑based explainability visualizations (attention maps) for model inspection by art historians.
-- Run a detailed calibration study and consider temperature scaling if probabilistic outputs are consumed downstream.
-
----
-
-## Appendix — Figures & EDA assets
-
-All images referenced below are in `data_description/` relative to the repository root. Use them directly in reports or Jupyter notebooks.
-
-- `data_description/overall_class_distribution.png` — overall class counts (log scale available in original EDA).
-- `data_description/class_distribution_before_sampler.png` — distribution before sampler.
-- `data_description/class_distribution_after_sampler.png` — distribution after applying `WeightedRandomSampler` (train set).
-- `data_description/sample_grid.png` — representative sample images used for manual checks.
-- `data_description/image_size_hist.png` and `data_description/image_size_boxplot.png` — image size diagnostics.
-- `data_description/training_distribution.png`, `data_description/validation_distribution.png`, `data_description/test_distribution.png` — split distributions.
-
-If you want, I can embed these figures inline into this markdown file (they are available under `data_description/`).
-
----
-
-## Change log
-- Consolidated duplicates and removed financial/cost sections (academic focus).
-- Reorganized into canonical CRISP‑DM phases with clear figure references.
-
----
-
-If you want me to: embed the images inline now, or include a small selection of log snippets (training logs, best epoch lines), say which images and which log excerpts and I'll insert them in the Appendix inline.
-
-
-
-Phase 1: Business Understanding
-📝 Problem Statement
-Problème: Classification automatique d'images artistiques en styles/mouvements correspondants (ex: Impressionnisme, Cubisme, Baroque).
-
-Solution: Système de deep learning utilisant Vision Transformers et CNNs pour la classification multi-classes.
-
-
-Objectifs Business
-Objectif	Métrique	Cible	Résultat
-Précision	F1-Score Macro	≥ 65%	66.9% ✅
-Vitesse	Temps d'inférence	< 100ms	50ms ✅
-Couverture	Nombre de styles	27	27 ✅
-Évolutivité	Images traitées	80K+	81,444 ✅
-
-👥 Parties Prenantes
-Équipe Data Science : Développement des modèles
-
-Équipe Web : Intégration et déploiement
-
-Experts en Histoire de l'Art : Validation des résultats
-
-
-
-Phase 2: Data Understanding
-📊 Dataset Overview
-Caractéristique	Valeur
-Images totales	81,444
-Nombre de classes	27
-Format d'image	JPEG/PNG
-Résolution	Variable (standardisée à 224×224)
-Source	WikiArt Dataset
-
-
- Liste des Styles Artistiques (27)
-CLASSES = [
-    'Abstract_Expressionism', 'Action_painting', 'Analytical_Cubism',
-    'Art_Nouveau_Modern', 'Baroque', 'Color_Field_Painting',
-    'Contemporary_Realism', 'Cubism', 'Early_Renaissance', 
-    'Expressionism', 'Fauvism', 'High_Renaissance',
-    'Impressionism', 'Mannerism_Late_Renaissance', 'Minimalism',
-    'Naive_Art_Primitivism', 'New_Realism', 'Northern_Renaissance',
-    'Pointillism', 'Pop_Art', 'Post_Impressionism',
-    'Realism', 'Rococo', 'Romanticism', 
-    'Symbolism', 'Synthetic_Cubism', 'Ukiyo_e'
-]
-
-⚖️ Analyse de Distribution des Classes
-Déséquilibre initial: Ratio 5:1 (classe majoritaire vs minoritaire)
-
-Stratégie de correction:
-
-Échantillonnage pondéré: WeightedRandomSampler
-
-Poids de loss: CrossEntropyLoss(weight=class_weights)
-
-Formule: w_c = 1 / √(n_c) où n_c = nombre d'images par classe
-
-🔍 Qualité des Données
-Images manquantes: 0%
-
-Fichiers corrompus: < 0.1%
-
-Plage de résolution: 50×50 à 5000×5000 pixels
-
-Espace couleur: RGB (conversion depuis RGBA si nécessaire)
-
-
-
-Phase 3: Data Preparation
-🎯 Stratégie de Split des Données
-Split stratifié Train/Validation/Test:
-
-# Répartition avec stratification
-total_images = 81,444
-↓
-├─ Train:  58,842 images (72.0%)
-├─ Val:    10,385 images (12.75%)
-└─ Test:   12,217 images (15.25%)
-
-Méthode: train_test_split avec stratify=True
-
-Seed: 123 pour reproductibilité
-
-Avantage: Distribution préservée dans tous les splits
-
-
-🖼️ Prétraitement des Images
-Chargeur Optimisé (C++ vs PIL)
-
-# ANCIEN - PIL (lent)
-from PIL import Image
-img = Image.open(path)  # ~5-8s pour 100 images
-
-# NOUVEAU - Décodeur C++ (rapide)
-from torchvision.io import read_image
-img = read_image(path)  # ~0.3-0.5s pour 100 images
-
-
-Gain de performance: 15-20x plus rapide
-
-Normalisation Spécifique aux Modèles
-Pour CNNs (ResNet, EfficientNet):
-
-mean = [0.485, 0.456, 0.406]  # Statistiques ImageNet
-std = [0.229, 0.224, 0.225]
-
-Pour Vision Transformers (ViT, CLIP):
-mean = [0.48145466, 0.4578275, 0.40821073]  # Statistiques CLIP
-std = [0.26862954, 0.26130258, 0.27577711]
-
-
-🔄 Pipeline d'Augmentation de Données
-Stratégie Conservative (EVA02-CLIP)
-
-train_transform = transforms.Compose([
-    T.RandomResizedCrop(224, scale=(0.9, 1.0)),  # Recadrage serré
-    T.RandomHorizontalFlip(p=0.5),               # Retournement horizontal
-    T.ColorJitter(0.1, 0.1, 0.1, 0.05),         # Variations couleur subtiles
-    T.Normalize(clip_mean, clip_std)             # Normalisation CLIP
-])
-
-Pourquoi conservateur?
-
-Les modèles pré-entraînés CLIP ont déjà appris la robustesse
-
-L'augmentation agressive peut détruire les patterns artistiques
-
-Préservation de la sémantique visuelle
-
-Transformation de Validation
-
-val_transform = transforms.Compose([
-    T.Resize(int(224 * 1.14)),  # Redimensionnement multi-échelle
-    T.CenterCrop(224),          # Recadrage central
-    T.Normalize(model_stats)    # Normalisation spécifique
-])
-
-
-⚖️ Gestion du Déséquilibre des Classes
-Double Stratégie
-Échantillonnage pondéré:
-
-sample_weights = [1/√(count_per_class[label]) for label in train_labels]
-sampler = WeightedRandomSampler(weights, replacement=True)
-
-Pondération de la fonction de loss:
-
-class_weights = torch.tensor([1/√(count_c) for c in classes])
-criterion = nn.CrossEntropyLoss(weight=class_weights)
-
-Impact: Amélioration de 12 points de F1 pour les classes minoritaires
-
-Phase 4: Modeling
-🏗️ Architecture des Modèles
-1. SimpleCNN - Réseau de Base
-
-
-class SimpleCNN(nn.Module):
-    def __init__(self, num_classes, img_size=224):
-        super().__init__()
-        self.features = nn.Sequential(
-            # Couche 1: 32 filtres
-            nn.Conv2d(3, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(), nn.MaxPool2d(2),
-            # Couche 2: 64 filtres  
-            nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(), nn.MaxPool2d(2),
-            # Couche 3: 128 filtres
-            nn.Conv2d(64, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(), nn.MaxPool2d(2)
-        )
-        
-        # Classificateur dynamique
-        self.classifier = nn.Sequential(
-            nn.Dropout(0.3),
-            nn.Linear(n_features, 512), nn.ReLU(), nn.BatchNorm1d(512),
-            nn.Dropout(0.3), 
-            nn.Linear(512, num_classes)
-        )
-
-Caractéristiques:
-
-Fonction d'activation: ReLU
-
-Regularisation: Dropout (0.3) + BatchNorm
-
-Pooling: MaxPool2d
-
-Champ réceptif: ~51×51 pixels
-
-2. DeepCNN - Architecture Avancée
-
-class DeepCNN(nn.Module):
-    def __init__(self, num_classes):
-        super().__init__()
-        self.layer1 = ConvBlock(3, 64)      # Bloc 1: 64 filtres
-        self.layer2 = ConvBlock(64, 128)    # Bloc 2: 128 filtres  
-        self.layer3 = ConvBlock(128, 256)   # Bloc 3: 256 filtres
-        self.layer4 = ConvBlock(256, 512)   # Bloc 4: 512 filtres
-        
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))  # Pooling adaptatif
-        self.fc = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(512, 256), nn.ReLU(), nn.BatchNorm1d(256),
-            nn.Dropout(0.5),
-            nn.Linear(256, num_classes)
-        )
-
-
-Innovation: Pooling adaptatif pour toute taille d'entrée
-
-3. Vision Transformers - Architectures Modernes
-ViT-B/16 (ImageNet-21K):
-
-Patch size: 16×16 → 196 patches
-
-Embedding dimension: 768
-
-Nombre de couches: 12 blocs transformer
-
-Têtes d'attention: 12
-
-Pré-entraînement: ImageNet-21K (14M images)
-
-OpenCLIP ViT-B/16:
-
-Pré-entraînement: LAION-2B (2B images-textes)
-
-Apprentissage: Contrastif multimodal
-
-EVA02-CLIP:
-
-
-Améliorations: Initialisation + régularisation avancée
-
-Données: 400M paires image-texte
-
-⚙️ Hyperparamètres d'Entraînement
-Configuration par Modèle
-
-
-Modèle	Learning Rate	Batch Size	Epochs	Optimizer	Weight Decay
-SimpleCNN	5e-4	128	50	AdamW	1e-4
-DeepCNN	5e-4	32	70	AdamW	1e-4
-ViT-B/16	1e-5	16	40	AdamW	1e-4
-OpenCLIP	1e-5	16	40	AdamW	1e-4
-Stratégie d'Optimisation
-
-# Optimiseur AdamW
-optimizer = optim.AdamW(
-    model.parameters(),
-    lr=learning_rate,
-    weight_decay=weight_decay
-)
-
-# Scheduler Cosine
-scheduler = optim.lr_scheduler.CosineAnnealingLR(
-    optimizer, 
-    T_max=epochs,
-    eta_min=learning_rate * 0.1
-)
-
-🛡️ Techniques de Régularisation
-1. Label Smoothing (0.1)
-
-criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-
-Effet: Évite la confiance extrême [0, 1] → [0.03, 0.97]
-
-2. Gradient Clipping
-torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-
-But: Prévention des gradients explosifs
-
-3. Early Stopping
-Patience: 8 epochs
-
-Métrique: F1-Score de validation
-
-4. Mixed Precision (FP16)
-
-with amp.autocast(device_type='cuda', dtype=torch.float16):
-    outputs = model(images)
-    loss = criterion(outputs, labels)
-
-Avantage: 2x vitesse + 50% mémoire
-
-Phase 5: Evaluation
-📊 Performance Comparative des Modèles
-Modèle	F1-Score	Accuracy	Precision	Recall	Best Epoch	Training Time
-ViT-B/16 (ImageNet-21K)	66.9%	67.4%	66.9%	66.8%	11	~3.1h
-EVA02-CLIP	66.0%	66.2%	66.0%	65.9%	13	~3.4h
-OpenCLIP ViT-B/16	65.2%	65.8%	65.2%	65.1%	12	~3.2h
-ResNet50	61.8%	62.0%	61.8%	61.0%	9	~2.5h
-EfficientNetV2-S	60.5%	61.2%	60.5%	60.2%	8	~2.0h
-🎯 Analyse des Résultats
-Hiérarchie de Performance
-Transformers (65-67%) > CNNs Avancés (60-62%) > CNNs Simples (45-50%)
-
-Écart architectural: 6% entre meilleur CNN et pire Transformer
-
-Performance par Classe
-Classes Performantes (F1 > 75%):
-
-Abstract Expressionism (82%)
-
-Romanticism (81%)
-
-Cubism (79%)
-
-Expressionism (78%)
-
-Classes Difficiles (F1 < 55%):
-
-Art Nouveau Modern (48%)
-
-Early Renaissance (52%)
-
-Color Field Painting (51%)
-
-🔍 Analyse des Erreurs
-Patterns de Confusion
-Adjacence temporelle: Impressionism ↔ Post-Impressionism (32% erreurs)
-
-Styles minimaux: Color Field Painting → confusion avec l'abstraction
-
-Périodes transitionnelles: Early Renaissance ↔ High Renaissance
-
-Calibration des Confiances
-
-
-Niveau Confiance	Précision	% Prédictions
-Élevé (>90%)	89.2%	67%
-Moyen (70-90%)	64.3%	23%
-Faible (<70%)	38.1%	10%
-Interprétation: Le modèle "sait quand il ne sait pas"
-
-📈 Métriques Détaillées
-F1-Score Macro vs Micro
-Macro-F1: 66.9% (moyenne non pondérée)
-
-Micro-F1: 67.4% (moyenne pondérée)
-
-Écart: 0.5% → déséquilibre bien géré
-
-Matrice de Confusion Insights
-Diagonale forte: Classes distinctives bien classées
-
-Confusions logiques: Styles historiquement/sylistiquement proches
-
-Pas d'erreurs aléatoires: Preuve d'apprentissage significatif
-Phase 6: Deployment
-🚀 Architecture de Déploiement
-Application Flask
-
-
-app = Flask(__name__, static_folder="static", template_folder="templates")
-
-@app.route("/predict", methods=["POST"])
-def predict():
-    # 1. Upload et validation
-    file = request.files["file"]
-    
-    # 2. Prétraitement
-    img = Image.open(image_path).convert("RGB")
-    img_t = transform(img).unsqueeze(0).to(DEVICE)
-    
-    # 3. Inférence
-    with torch.no_grad():
-        outputs = model(img_t)
-        probs = F.softmax(outputs, dim=1)
-    
-    # 4. Formatage réponse
-    return jsonify({
-        "predictions": [
-            {"class": class_names[i], "prob": float(p)} 
-            for i, p in zip(top_idxs, top_probs)
-        ]
-    })
-
-
-Performance d'Inférence
-Étape	Temps	Description
-Chargement image	5-8ms	Lecture fichier
-Prétraitement	2-3ms	Transformation + normalisation
-Inférence GPU	40-45ms	Forward pass modèle
-Post-traitement	1-2ms	Softmax + top-k
-TOTAL	50-60ms	Temps end-to-end
-📊 Métriques de Production
-
-Performance Réelle
-Débit max: 22 images/seconde/GPU
-
-Latence p95: < 80ms
-
-Utilisation GPU: ~85%
-
-Taux d'erreur: < 0.1%
-
-Coût d'Exploitation
-Coût par image: $0.0000063
-
-1M images: $6.30 (vs $1,000 AWS Rekognition)
-
-Économie: 99% vs solutions cloud
-
-
-Technical Specifications
-🛠️ Stack Technique
-
-# Dépendances principales
-torch==2.5.1+cu121          # GPU acceleration
-torchvision==0.20.1         # C++ JPEG decoder
-timm==0.9.7                 # Model hub
-flask==2.3.0                # Web server
-Pillow==10.0.0              # Image processing
-scikit-learn==1.3.0         # Metrics & splits
-
-⚡ Optimisations GPU
-
-# Configuration performance
-torch.backends.cudnn.benchmark = True
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.cuda.amp.autocast(enabled=True)  # Mixed precision
-
-# DataLoader optimizations
-pin_memory=True
-num_workers=4
-persistent_workers=False
-
-📁 Structure des Checkpoints
-
-checkpoints/
-├── vit_base_in21k_best.pth          # Modèle gagnant
-├── eva02_clip_best.pth              # Second meilleur
-├── openclip_vitb16_best.pth         # Alternative
-└── resnet50_best.pth               # Fallback léger
-
-Performance Analysis
-🎯 KPIs Clés
-Métrique	Valeur	Statut	Analyse
-F1-Score Macro	66.9%	✅ Dépassé	+1.9% vs objectif 65%
-Accuracy	67.0%	✅ Excellent	Cohérent avec F1
-Temps Inférence	50ms	✅ Rapide	2x mieux que cible 100ms
-Gap Train-Val	31.3%	✅ Acceptable	Régularisation efficace
-Convergence	11 epochs	✅ Efficace	45% plus rapide que max
-📈 Analyse Comparative
-
-
-Transformers vs CNNs
-Avantage Transformers: +5% F1 en moyenne
-
-Explication: Attention globale vs convolution locale
-
-Impact business: Meilleure discrimination des styles complexes
-
-Impact Augmentation
-Standard: F1 = 65.3%
-
-Conservateur: F1 = 66.9%
-
-Gain: +1.6% avec stratégie adaptée
-
-💰 Analyse Coût-Bénéfice
-Développement vs Production
-
-
-Phase	Coût	Bénéfice
-R&D (GPU hours)	~$50	Modèles optimisés
-Inférence (par image)	$0.0000063	Classification automatique
-Maintenance	Faible	API Flask simple
-ROI Potentiel
-vs Annotation humaine: $5-10/image → $0.0000063/image
-
-Économie: 99.9% de réduction des coûts
-
-Scalabilité: Linéaire avec hardware
-
-Conclusions & Recommendations
-🎉 Conclusions Principales
-✅ Objectif Atteint: 66.9% F1 > 65% cible
-
-🏆 Meilleur Modèle: ViT-B/16 ImageNet-21K
-
-⚡ Performance: Temps réel (50ms) et précis
-
-💰 Efficient: Coût d'exploitation négligeable
-
-🚀 Recommandations de Déploiement
-Court Terme (Immediate)
-
-# Modèle de production
-PRODUCTION_MODEL = "ViT-B/16 ImageNet-21K"
-FALLBACK_MODEL = "ResNet50"  # Pour contraintes mémoire
-
-Moyen Terme (Optimisations)
-Quantisation INT8: Réduction mémoire 75%
-
-Cache prédictions: Images répétitives
-
-Batching dynamique: Augmentation débit
-
-Long Terme (Améliorations)
-Fine-tuning avec données domaine spécifique
-
-Ensemble learning combinaison modèles
-
-Explicabilité via attention maps
-
-📚 Lessons Apprises
-Techniques
-Transformers > CNNs pour classification artistique
-
-Augmentation conservative meilleure pour transfer learning
-
-Normalisation spécifique cruciale pour pré-entraînement
-
-Méthodologiques
-Test systématique de multiples architectures payant
-
-Métriques multiples nécessaire pour évaluation complète
-
-Pipeline reproductible essentiel pour comparaison
-
-🎯 Statut Final: PRODUCTION READY ✅
-Le système répond à tous les critères de succès et est prêt pour le déploiement en production avec des performances excellentes et un coût d'exploitation minimal.
-
-Phase 4: Modeling
-🏗️ Architecture des Modèles
-🔬 Architectures From Scratch Détaillées
-1. SimpleCNN - Réseau Convolutif Léger
-Architecture Complète
-python
-class SimpleCNN(nn.Module):
-    """
-    CNN simple 3 couches avec calcul dynamique de la taille des features
-    Paramètres: ~2 millions
-    """
-    def __init__(self, num_classes=27, img_size=224):
-        super().__init__()
-        
-        # Bloc caractéristiques - 3 couches convolutives
-        self.features = nn.Sequential(
-            # Couche 1: Extraction features bas-niveau
-            nn.Conv2d(3, 32, kernel_size=3, padding=1),  # 32 filtres 3x3
-            nn.BatchNorm2d(32),                          # Normalisation batch
-            nn.ReLU(inplace=True),                       # Activation ReLU
-            nn.MaxPool2d(2),                             # Pooling 2x2
-            
             # Couche 2: Features intermédiaires
             nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 filtres 3x3
             nn.BatchNorm2d(64),
