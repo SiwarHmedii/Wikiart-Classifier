@@ -531,4 +531,139 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
 
 
 
+# ==========================================================
+# 🔹 6️⃣ Evaluation Function
+# ==========================================================
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score
+)
+import numpy as np
+
+def evaluate_model(model, loader, class_names):
+    model.eval()
+    correct, total, preds, labels_all = 0, 0, [], []
+
+    with torch.no_grad():
+        for imgs, labels in loader:
+            imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
+            outputs = model(imgs)
+            p = outputs.argmax(1)
+            correct += (p == labels).sum().item()
+            total += labels.size(0)
+            preds.extend(p.cpu().numpy())
+            labels_all.extend(labels.cpu().numpy())
+
+    # Metrics
+    acc = correct / total if total > 0 else 0.0
+    error_rate = 1 - acc
+
+    macro_f1 = f1_score(labels_all, preds, average='macro')
+    weighted_f1 = f1_score(labels_all, preds, average='weighted')
+    macro_precision = precision_score(labels_all, preds, average='macro', zero_division=0)
+    weighted_precision = precision_score(labels_all, preds, average='weighted', zero_division=0)
+    macro_recall = recall_score(labels_all, preds, average='macro', zero_division=0)
+    weighted_recall = recall_score(labels_all, preds, average='weighted', zero_division=0)
+
+    cm = confusion_matrix(labels_all, preds)
+    report = classification_report(labels_all, preds, target_names=class_names, zero_division=0)
+
+    # Display summary
+    print("\n==============================")
+    print("📊 MODEL EVALUATION SUMMARY")
+    print("==============================")
+    print(f"✅ Accuracy:       {acc:.4f}")
+    print(f"❌ Error Rate:     {error_rate:.4f}")
+    print(f"🎯 Macro F1:       {macro_f1:.4f}")
+    print(f"📦 Weighted F1:    {weighted_f1:.4f}")
+    print(f"✨ Macro Precision: {macro_precision:.4f}")
+    print(f"✨ Weighted Prec.:  {weighted_precision:.4f}")
+    print(f"📈 Macro Recall:    {macro_recall:.4f}")
+    print(f"📈 Weighted Recall: {weighted_recall:.4f}")
+    print(f"🧮 Confusion Matrix: {cm.shape}")
+    print("==============================\n")
+    print(report)
+
+    return {
+        "accuracy": acc,
+        "error_rate": error_rate,
+        "macro_f1": macro_f1,
+        "weighted_f1": weighted_f1,
+        "macro_precision": macro_precision,
+        "weighted_precision": weighted_precision,
+        "macro_recall": macro_recall,
+        "weighted_recall": weighted_recall,
+        "confusion_matrix": cm
+    }
+
+
+# ==========================================================
+# 🔹 7️⃣ Model-Specific Configurations (edit as needed)
+# ==========================================================
+model_configs = {
+  "SimpleCNN": {"img_size": 128, "rotation": 15, "color_jitter": (0.2, 0.2, 0.2, 0.05), "batch": 128, "epochs": 50, "lr": 0.0005}, #30
+  "DeepCNN": {"img_size": 224, "rotation": 20, "color_jitter": (0.3, 0.3, 0.2, 0.05), "batch": 32, "epochs": 70, "lr": 5e-4}, #60
+  "openclip_vitb16": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  "vit_base_in21k": {"img_size": 224, "rotation": 0, "color_jitter": (0.4, 0.4, 0.3, 0.1), "batch": 16, "epochs": 40, "lr": 1e-5}, 
+  }
+
+# ==========================================================
+# 🔹 8️⃣ Model factory (map names to constructors)
+# ==========================================================
+def build_model_by_name(name, num_classes, img_size):
+    """
+    Return an instantiated model for the given name.
+    Pass img_size where the constructor accepts it (SimpleCNN,etc).
+    """
+    if name == "SimpleCNN":
+        return SimpleCNN(num_classes, img_size=img_size)
+    elif name == "DeepCNN":
+        return DeepCNN(num_classes)
+    elif name == "openclip_vitb16":
+        return get_openclip_vitb16(num_classes)
+    elif name == "vit_base_in21k":
+        return get_vit_base_in21k(num_classes)
+            
+    else:
+        raise ValueError(f"Unknown model name: {name}")
+
+
+# ==========================================================
+# 🔹 9️⃣ Main model loop — only runs models defined in model_configs
+# ==========================================================
+if __name__ == "__main__":
+    # iterate over configured models only
+    for name, cfg in model_configs.items():
+        print(f"\n==============================")
+        print(f"🚀 Starting {name} | IMG={cfg['img_size']} | Batch={cfg['batch']} | LR={cfg['lr']} | Epochs={cfg['epochs']}")
+        print(f"==============================\n")
+
+        # Build model (pass img_size for those that need it)
+        model = build_model_by_name(name, NUM_CLASSES, img_size=cfg["img_size"])
+
+        # Create transforms for this model (model-specific augmentation)
+        train_tf, val_tf = get_transforms(name, cfg["img_size"], cfg["rotation"], cfg["color_jitter"])
+
+        # Create loaders using the transforms
+        train_loader, val_loader, test_loader = create_loaders(
+            name, cfg["batch"], train_tf, val_tf
+        )
+
+        # Train
+        model = train_model(model, train_loader, val_loader, cfg["epochs"], cfg["lr"], name)
+
+        # Load best checkpoint and evaluate on test set
+        ckpt_path = CHECKPOINT_DIR / f"{name}_best.pth"
+        if ckpt_path.exists():
+            model.load_state_dict(torch.load(ckpt_path, map_location=DEVICE))
+            evaluate_model(model, test_loader, class_names)
+        else:
+            print(f"⚠️ No checkpoint found for {name}, skipping final evaluation.")
+
+    print("\n🏁 All configured models processed.")
+
+
 
