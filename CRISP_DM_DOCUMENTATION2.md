@@ -2325,6 +2325,35 @@ With weighting: Minority F1 ≈ 52%
 
 Improvement: +12 F1 points for rare classes
 
+
+ Art Style Distribution
+
+pie title Art Style Class Distribution
+    "Impressionism" : 4200
+    "Post-Impressionism" : 3800
+    "Expressionism" : 3200
+    "High Renaissance" : 2800
+    "Romanticism" : 2600
+    "Other Styles" : 64844
+
+
+Phase 3: Data Preparation
+🎯 Data Splitting Strategy
+
+flowchart TD
+    A[81,444 Total Images] --> B[Stratified Split]
+    B --> C[58,842 Training<br/>72.0%]
+    B --> D[10,385 Validation<br/>12.75%]
+    B --> E[12,217 Testing<br/>15.25%]
+    
+    C --> F[Weighted Sampling]
+    F --> G[Balanced Mini-batches]
+    
+    D --> H[Hyperparameter Tuning]
+    E --> I[Final Evaluation]
+
+    
+
 Phase 4: Modeling
 🏗️ Detailed Model Architectures
 1. SimpleCNN - Lightweight From Scratch Architecture
@@ -3283,29 +3312,6 @@ INFERENCE TIMING BREAKDOWN:
 └─────────────────────┴─────────────┴─────────────────┘
 Technical Specifications
 🛠️ System Architecture
-
-
-
-
-
-
-
-
-
-
-
-Performance Analysis
-📈 Training Convergence
-
-
-
-
-
-
-
-
-
-
 
 
 
