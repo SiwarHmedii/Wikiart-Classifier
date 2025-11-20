@@ -1,7 +1,7 @@
 # ==========================================================
 # 🌐 WikiArt API - Fancy Image Classification Web App
 # ==========================================================
-# Author: Siwar
+# Authors: Siwar Hmedi / Mariem Arfaoui/ Anwar Hriz/ Zied Touahri / Mahdi Younsi/ Nour Bayoudh
 # Description: Flask-based API + Web UI for WikiArt Classification
 #source .venv/bin/activate
 #http://localhost:7860# ==========================================================
@@ -26,7 +26,7 @@ from torchvision import transforms
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 CHECKPOINT_PATH = Path("./checkpoints") / "openclip_vitb16_best.pth"
 
-# These MUST match training, not the current folder state
+
 NUM_CLASSES = 27
 
 # Load only valid class names (ignore junk folders)

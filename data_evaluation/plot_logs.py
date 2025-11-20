@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from collections import defaultdict
 
-log_path = Path("logs/train_2025-11-18_21-54-13.log")
+log_path = Path("logs/train_2025-11-19_09-05-14.log")
 
 # Create output folder
 out_dir = Path("data_evaluation/")

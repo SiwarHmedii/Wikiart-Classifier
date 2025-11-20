@@ -10,7 +10,7 @@ __pycache__/
 # Logs & checkpoints
 logs/
 checkpoints/
-*.log
+#*.log
 
 # Datasets
 wikiart/

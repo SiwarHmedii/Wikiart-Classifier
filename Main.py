@@ -7,37 +7,40 @@
 # - SimpleCNN is dynamic (infers flattened size)
 # - Safe defaults for Windows: num_workers=0
 # ==========================================================
-
 import os
+import sys
 import random
-import numpy as np
+import datetime
 from pathlib import Path
 from collections import Counter, defaultdict
+
+import numpy as np
 from tqdm import tqdm
 
-from torchvision import models
-import torch.nn as nn
-
-
 import torch
-torch.cuda.empty_cache()
-print("GPU:", torch.cuda.get_device_name(0))
-print("VRAM Total:", torch.cuda.get_device_properties(0).total_memory / 1024**3, "GB")
 import torch.nn as nn
 import torch.optim as optim
 from torch import amp
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
-from torchvision import transforms, models
+
 from torchvision.io import read_image
 import torchvision.transforms.v2 as T
 from PIL import Image
 
-
 import timm
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix, f1_score
+from sklearn.metrics import classification_report, confusion_matrix, f1_score, precision_score, recall_score
+
+# ------------------------------
+# 0️⃣ Safety / Backend
+# ------------------------------
 torch.backends.cudnn.benchmark = True
 torch.backends.cuda.matmul.allow_tf32 = True
+
+
+print("GPU:", torch.cuda.get_device_name(0))
+print("VRAM Total:", torch.cuda.get_device_properties(0).total_memory / 1024**3, "GB")
+
 # ------------------------------
 # 1️⃣ Reproducibility & Device
 # ------------------------------
@@ -61,8 +64,7 @@ CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
 # Save my LOGS
 #-------------------------------------------
 
-import sys
-import datetime
+
 
 # Create logs folder if it doesn't exist
 os.makedirs("logs", exist_ok=True)
@@ -348,7 +350,7 @@ class DeepCNN(nn.Module):
 # ==========================================================
 # ✅ openclip_vitb16 / best#1
 # ==========================================================
-import timm
+
 
 
 def get_openclip_vitb16(num_classes):
@@ -440,7 +442,7 @@ def train_model(model, train_loader, val_loader, epochs, lr, name):
 
         except Exception as e:
             # Print error and full stack so we can see memory / dataloader issues
-            import traceback, sys
+            
             print("❗ Exception during training loop:", e)
             traceback.print_exc(file=sys.stdout)
             # attempt to free a bit and continue/exit gracefully
@@ -515,7 +517,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score
 )
-import numpy as np
+
 
 def evaluate_model(model, loader, class_names):
     model.eval()
