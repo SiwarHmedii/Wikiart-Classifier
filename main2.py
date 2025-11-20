@@ -189,5 +189,175 @@ for cls in sorted(os.listdir(SOURCE_DIR)):
 print(f"\n🖼️ Loaded {len(all_images)} total images across {len(set(all_labels))} classes.\n")
 
 
+# ==========================================================
+# 6️⃣ OPTIONAL SAMPLING (FOR QUICK TESTING)
+# ==========================================================
+MAX_IMAGES_PER_CLASS = None  # set to an int for fast testing, or None for full dataset
+
+if MAX_IMAGES_PER_CLASS is not None:
+    print(f"⚡ Sampling up to {MAX_IMAGES_PER_CLASS} images per class for quick testing...")
+    sampled_images, sampled_labels = [], []
+    class_counter = defaultdict(int)
+    combined = list(zip(all_images, all_labels))
+    random.shuffle(combined)
+    all_images_shuf, all_labels_shuf = zip(*combined)
+    for img, label in zip(all_images_shuf, all_labels_shuf):
+        if class_counter[label] < MAX_IMAGES_PER_CLASS:
+            sampled_images.append(img)
+            sampled_labels.append(label)
+            class_counter[label] += 1
+    all_images, all_labels = sampled_images, sampled_labels
+    print(f"✅ Using {len(all_images)} images across {len(set(all_labels))} classes.\n")
+else:
+    # ensure lists (train_test_split later expects sequences)
+    all_images, all_labels = list(all_images), list(all_labels)
+
+# ==========================================================
+# 7️⃣ TRAIN/VAL/TEST SPLIT (stratified)
+# ==========================================================
+train_paths, test_paths, train_labels, test_labels = train_test_split(
+    all_images, all_labels, test_size=0.15, stratify=all_labels, random_state=SEED)
+train_paths, val_paths, train_labels, val_labels = train_test_split(
+    train_paths, train_labels, test_size=0.15, stratify=train_labels, random_state=SEED)
+# Now we have train (72%), val (15%), test (15%)
+# Create a consistent class -> idx mapping used by ALL datasets
+class_names = sorted(list(set(all_labels)))
+class_to_idx = {cls: i for i, cls in enumerate(class_names)}
+NUM_CLASSES = len(class_names)
+
+print(f"📊 Data split summary:")
+print(f"   ➤ Total images: {len(all_images)}")
+print(f"   ➤ Classes: {NUM_CLASSES}")
+print(f"   ➤ Train: {len(train_paths)}")
+print(f"   ➤ Val:   {len(val_paths)}")
+print(f"   ➤ Test:  {len(test_paths)}\n")
+
+
+# ==========================================================
+# 8️⃣ HANDLE CLASS IMBALANCE (Weighted Sampler + Loss Weights)---->updated
+# ==========================================================
+cls_count = Counter(train_labels)
+
+# Inverse-sqrt weighting
+cls_weights = {cls: 1.0 / np.sqrt(count) for cls, count in cls_count.items()}
+
+# Weighted sampler (balances mini-batches)
+sample_weights = [cls_weights[label] for label in train_labels]
+sampler = WeightedRandomSampler(sample_weights, num_samples=len(sample_weights), replacement=True)
+
+# Create tensor of weights in class index order for loss
+loss_weights = torch.tensor(
+    [cls_weights[c] for c in class_names], dtype=torch.float32
+).to(DEVICE)
+
+
+# ==========================================================
+# 9️⃣ DATALOADER CREATION FUNCTION (accepts transforms)
+# ==========================================================
+def create_loaders(name, batch_size, train_tf, val_tf):
+    """
+    Build train/val/test loaders using the global class_to_idx mapping.
+    Uses WeightedRandomSampler to balance classes.
+    """
+    train_ds = WikiArtDataset(train_paths, train_labels, class_to_idx=class_to_idx, transform=train_tf)
+    val_ds = WikiArtDataset(val_paths, val_labels, class_to_idx=class_to_idx, transform=val_tf)
+    test_ds = WikiArtDataset(test_paths, test_labels, class_to_idx=class_to_idx, transform=val_tf)
+
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        sampler=sampler,
+        num_workers=4, 
+        pin_memory=False,
+        drop_last=True,
+        persistent_workers=False
+    )
+
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
+                            num_workers=2, pin_memory=False)
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
+                             num_workers=2, pin_memory=False)
+    return train_loader, val_loader, test_loader
+
+
+# ==========================================================
+# 🔹 1️⃣ Simple CNN (size-adaptive)
+# ==========================================================
+class SimpleCNN(nn.Module):
+    """
+    Small CNN where the FC input is inferred dynamically from a dummy forward
+    to avoid shape mismatches for different img_size values.
+    """
+    def __init__(self, num_classes, img_size=224):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(), nn.MaxPool2d(2)
+        )
+
+        # Dynamically compute flattened feature dimension for the classifier
+        with torch.no_grad():
+            dummy = torch.zeros(1, 3, img_size, img_size) # create dummy input
+            n_features = self.features(dummy).view(1, -1).shape[1] # flatten size
+
+        self.classifier = nn.Sequential(
+            nn.Dropout(0.3), # prevent overfitting
+            nn.Linear(n_features, 512), # hidden layer
+            nn.ReLU(), # activation
+            nn.BatchNorm1d(512), # normalize
+            nn.Dropout(0.3), # prevent overfitting
+            nn.Linear(512, num_classes) # output layer
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = torch.flatten(x, 1)
+        return self.classifier(x)
+
+
+# ==========================================================
+# 🔹 2️⃣ Deep CNN (uses adaptive pooling so image size flexible)
+# ==========================================================
+class ConvBlock(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, 3, padding=1), nn.BatchNorm2d(out_ch), nn.ReLU(),
+            nn.Conv2d(out_ch, out_ch, 3, padding=1), nn.BatchNorm2d(out_ch), nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class DeepCNN(nn.Module):
+    """
+    Uses AdaptiveAvgPool so fully connected input size is always 512.
+    Safe for different input sizes.
+    """
+    def __init__(self, num_classes):
+        super().__init__()
+        self.layer1 = ConvBlock(3, 64)
+        self.layer2 = ConvBlock(64, 128)
+        self.layer3 = ConvBlock(128, 256)
+        self.layer4 = ConvBlock(256, 512)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(512, 256), nn.ReLU(), nn.BatchNorm1d(256),
+            nn.Dropout(0.5),
+            nn.Linear(256, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.layer1(x); x = self.layer2(x)
+        x = self.layer3(x); x = self.layer4(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        return self.fc(x)
+
+
 
 
